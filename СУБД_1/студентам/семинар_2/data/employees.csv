@@ -1,0 +1,4 @@
+first_name,last_name,email,hire_date,is_active
+"Иван","Иванов","ivan@company.com",2023-01-15,true
+"Петр","Петров","petr@company.com",2023-03-20,true
+"Мария","Сидорова","maria@company.com",2024-01-10,true
