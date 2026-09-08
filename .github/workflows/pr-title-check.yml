@@ -14,6 +14,9 @@ permissions:
 
 jobs:
   title-format:
+    # Проверяем только студенческие PR — они всегда из fork'ов.
+    # Служебные PR преподавателя (ветки этого же репозитория) пропускаем.
+    if: github.event.pull_request.head.repo.fork == true
     runs-on: ubuntu-latest
     steps:
       - name: Validate PR title
