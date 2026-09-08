@@ -1,0 +1,31 @@
+name: PR title check
+
+# Проверяет обязательный формат названия Pull Request:
+#   [<номер группы>] <ФИО>
+# - номер группы — в квадратных скобках, строка 1–20 символов;
+# - ФИО — ровно три слова, разделённые пробелом.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Название PR: $PR_TITLE"
+          if echo "$PR_TITLE" | grep -Eq '^\[[^]]{1,20}\] [^ ]+ [^ ]+ [^ ]+$'; then
+            echo "OK: формат названия корректен."
+          else
+            echo "::error::Название PR не соответствует шаблону '[<номер группы>] <ФИО>'."
+            echo "::error::Требования: номер группы в квадратных скобках (строка до 20 символов), затем пробел и ФИО — ровно три слова через пробел."
+            echo "::error::Пример: [15-25] Иванов Иван Иванович"
+            exit 1
+          fi
