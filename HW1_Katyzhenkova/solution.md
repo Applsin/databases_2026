@@ -14,6 +14,7 @@
 - Проект — Задача: один проект, ноль или много задач. Без проекта задачи быть не может, поэтому это идентифицирующая связь и FK с каскадом.
 - Сотрудник — Задача: исполнитель либо есть, либо его ещё не назначили. Значит, ноль или один к нулю или многим, связь неидентифицирующая, FK допускает NULL.
 - Задача — Комментарий: у задачи может быть много комментариев или ни одного. Комментарий без задачи не существует — идентифицирующая.
+- Сотрудник — Комментарий: один сотрудник, много написанных комментариев. Связь неидентифицирующая, комментарий имеет собственный PK.
 - Задача — Тег: тут многие-ко-многим. У одной задачи много тегов, и один тег висит на многих задачах. В реляционной модели напрямую так нельзя, поэтому делаю связующую таблицу.
 - Задача — История статусов: одна задача, много записей об изменениях. Это требование про аудит, поэтому вынесла в отдельную сущность.
 - Сотрудник — История статусов: один сотрудник, много записей. Нужно, чтобы понимать, кто именно менял статус.
@@ -46,13 +47,15 @@ task_status_history: history_id (PK), task_id (FK на tasks, NOT NULL), changed
 
 - projects ||--o{ tasks : содержит
 - employees |o--o{ tasks : исполняет
+- employees ||--o{ comments : пишет
+- employees ||--o{ task_status_history : меняет статус
 - tasks ||--o{ comments : имеет
 - tasks }o--o{ tags : помечена
 - tasks ||--o{ task_status_history : фиксирует
 
 Идентифицирующие связи: проект-задача, задача-комментарий, задача-история статусов. Дочерняя запись не имеет смысла без родителя.
 
-Неидентифицирующие: сотрудник-задача (исполнитель опционален), задача-тег (M:N через связующую таблицу), сотрудник-история статусов.
+Неидентифицирующие: сотрудник-задача (исполнитель опционален), сотрудник-комментарий (комментарий имеет свой PK), сотрудник-история статусов (запись имеет свой PK), задача-тег (M:N через связующую таблицу).
 
 ## 3. Физическая модель (PostgreSQL)
 
@@ -83,8 +86,6 @@ CREATE TABLE employees (
     CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
     CHECK (hire_date <= CURRENT_DATE)
 );
-
-CREATE INDEX idx_employees_email ON employees(email);
 
 CREATE TABLE tasks (
     task_id        SERIAL PRIMARY KEY,
@@ -139,8 +140,10 @@ CREATE TABLE task_status_history (
     history_id              SERIAL PRIMARY KEY,
     task_id                 INTEGER NOT NULL,
     changed_by_employee_id  INTEGER NOT NULL,
-    from_status             VARCHAR(20) NOT NULL,
-    to_status               VARCHAR(20) NOT NULL,
+    from_status             VARCHAR(20) NOT NULL
+        CHECK (from_status IN ('new', 'in_progress', 'done')),
+    to_status               VARCHAR(20) NOT NULL
+        CHECK (to_status IN ('new', 'in_progress', 'done')),
     changed_at              TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (task_id)                REFERENCES tasks(task_id)         ON DELETE CASCADE,
     FOREIGN KEY (changed_by_employee_id) REFERENCES employees(employee_id) ON DELETE RESTRICT
