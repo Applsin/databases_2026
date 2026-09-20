@@ -30,7 +30,7 @@ CREATE TABLE "enrollments" (
   "user_id" integer NOT NULL,
   "course_id" integer NOT NULL,
   "enrolled_at" timestamp NOT NULL,
-  "status" varchar NOT NULL
+  "status" varchar NOT NULL CHECK ("status" in ('in_progress', 'completed', 'dropped'))
 );
 
 CREATE TABLE "reviews" (
@@ -41,6 +41,9 @@ CREATE TABLE "reviews" (
   "comment" text,
   "created_at" timestamp NOT NULL
 );
+
+
+
 
 
 ALTER TABLE "courses" ADD FOREIGN KEY ("author_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
@@ -54,6 +57,7 @@ ALTER TABLE "enrollments" ADD FOREIGN KEY ("course_id") REFERENCES "courses" ("i
 ALTER TABLE "reviews" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "reviews" ADD FOREIGN KEY ("course_id") REFERENCES "courses" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
 
 
 CREATE INDEX idx_courses_author_id ON courses (author_id);
