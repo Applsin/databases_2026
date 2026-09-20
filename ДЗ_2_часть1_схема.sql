@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS enrollments CASCADE;
 DROP TABLE IF EXISTS lessons CASCADE;
 DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS teachers CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 -- ТАБЛИЦЫ ИЗ ДЗ №1
@@ -16,10 +18,21 @@ CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL
-        CHECK (role IN ('student', 'teacher'))
+    password VARCHAR(255) NOT NULL
 );
+
+-- Cтуденты
+CREATE TABLE students (
+    student_id INTEGER PRIMARY KEY
+    REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Преподаватели
+CREATE TABLE teachers (
+    teacher_id INTEGER PRIMARY KEY
+    REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 
 -- Курсы, которые создают преподаватели
 CREATE TABLE courses (
@@ -29,7 +42,7 @@ CREATE TABLE courses (
     price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
     commission_rate DECIMAL(5, 2) NOT NULL DEFAULT 30.00
         CHECK (commission_rate BETWEEN 0 AND 100),
-    FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE RESTRICT
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_courses_teacher_id ON courses(teacher_id);
@@ -50,7 +63,7 @@ CREATE INDEX idx_lessons_course_id ON lessons(course_id);
 -- Запись студента на курс (фиксирует факт и сумму оплаты)
 CREATE TABLE enrollments (
     enrollment_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
     enrolled_at TIMESTAMP DEFAULT NOW(),
     amount_paid DECIMAL(10, 2) NOT NULL CHECK (amount_paid >= 0),
@@ -58,28 +71,28 @@ CREATE TABLE enrollments (
         CHECK (payment_status IN ('paid', 'refunded')),
     status VARCHAR(20) DEFAULT 'active'
         CHECK (status IN ('active', 'completed')),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
-    UNIQUE (user_id, course_id)
+    UNIQUE (student_id, course_id)
 );
 
-CREATE INDEX idx_enrollments_user_id ON enrollments(user_id);
+CREATE INDEX idx_enrollments_user_id ON enrollments(student_id);
 CREATE INDEX idx_enrollments_course_id ON enrollments(course_id);
 
 -- Отзывы студентов о курсах
 CREATE TABLE reviews (
     review_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
     rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
-    UNIQUE (user_id, course_id)
+    UNIQUE (student_id, course_id)
 );
 
-CREATE INDEX idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX idx_reviews_user_id ON reviews(student_id);
 CREATE INDEX idx_reviews_course_id ON reviews(course_id);
 
 -- Выплаты преподавателям за период
@@ -92,7 +105,7 @@ CREATE TABLE payouts (
     payout_status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (payout_status IN ('pending', 'paid')),
     paid_at TIMESTAMP,
-    FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE RESTRICT,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE RESTRICT,
     CHECK (period_end >= period_start)
 );
 
@@ -146,11 +159,14 @@ CREATE INDEX idx_certificates_issued_at ON certificates(issued_at);
 
 -- Тестовые данные
 
-INSERT INTO users (name, email, password, role) VALUES
-    ('Иван Петров', 'teacher1@edu.ru', 'hash1', 'teacher'),
-    ('Мария Сидорова', 'teacher2@edu.ru', 'hash2', 'teacher'),
-    ('Алексей Смирнов', 'student1@edu.ru', 'hash3', 'student'),
-    ('Ольга Кузнецова', 'student2@edu.ru', 'hash4', 'student');
+INSERT INTO users (name, email, password) VALUES
+    ('Иван Петров', 'teacher1@edu.ru', 'hash1'),
+    ('Мария Сидорова', 'teacher2@edu.ru', 'hash2'),
+    ('Алексей Смирнов', 'student1@edu.ru', 'hash3'),
+    ('Ольга Кузнецова', 'student2@edu.ru', 'hash4');
+
+INSERT INTO teachers (teacher_id) VALUES (1), (2);
+INSERT INTO students (student_id) VALUES (3), (4);
 
 INSERT INTO courses (teacher_id, name_course, price, commission_rate) VALUES
     (1, 'Основы SQL', 5000.00, 30.00),
@@ -165,12 +181,12 @@ INSERT INTO lessons (course_id, name_lesson, lesson_time, order_number) VALUES
     (2, 'Индексы и планы запросов', 60, 2),
     (3, 'Переменные и типы', 35, 1);
 
-INSERT INTO enrollments (user_id, course_id, amount_paid, payment_status, status) VALUES
+INSERT INTO enrollments (student_id, course_id, amount_paid, payment_status, status) VALUES
     (3, 1, 5000.00, 'paid', 'completed'),
     (3, 2, 8000.00, 'paid', 'active'),
     (4, 1, 5000.00, 'paid', 'active');
 
-INSERT INTO reviews (user_id, course_id, rating, comment) VALUES
+INSERT INTO reviews (student_id, course_id, rating, comment) VALUES
     (3, 1, 5, 'Отличный курс, всё понятно объясняют'),
     (4, 1, 4, 'Хорошо, но хотелось бы больше практики');
 
