@@ -10,7 +10,7 @@
 
 DO $$
 BEGIN
-    INSERT INTO reviews (user_id, course_id, rating, comment)
+    INSERT INTO reviews (student_id, course_id, rating, comment)
     VALUES (4, 3, 10, 'Ставлю 10 из 5!');
 
     RAISE NOTICE '1. CHECK: ошибки не произошло — ограничение не сработало!';
@@ -37,14 +37,29 @@ EXCEPTION
 END;
 $$;
 
+-- 2а. Нарушение FOREIGN KEY на таблице роли
+-- Ограничение: courses.teacher_id REFERENCES teachers(teacher_id)
+-- Бизнес-правило: курс может вести только тот, кто зарегистрирован как преподаватель.
+
+DO $$
+BEGIN
+    INSERT INTO courses (teacher_id, name_course, price)
+    VALUES (3, 'Курс от не-преподавателя', 1000.00);
+
+    RAISE NOTICE '2а. FOREIGN KEY (роль): ошибки не произошло — ограничение не сработало!';
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE NOTICE '2а. FOREIGN KEY (роль) — Нельзя создать курс: пользователь 3 не зарегистрирован как преподаватель (нет записи в teachers). Технический текст: %', SQLERRM;
+END;
+$$;
 
 -- 3. Нарушение UNIQUE
--- Ограничение: enrollments UNIQUE (user_id, course_id)
+-- Ограничение: enrollments UNIQUE (student_id, course_id)
 -- Бизнес-правило: студент не может купить один и тот же курс дважды.
 
 DO $$
 BEGIN
-    INSERT INTO enrollments (user_id, course_id, amount_paid, payment_status, status)
+    INSERT INTO enrollments (student_id, course_id, amount_paid, payment_status, status)
     VALUES (3, 1, 5000.00, 'paid', 'active');
 
     RAISE NOTICE '3. UNIQUE: ошибки не произошло — ограничение не сработало!';
@@ -61,8 +76,8 @@ $$;
 
 DO $$
 BEGIN
-    INSERT INTO users (name, email, password, role)
-    VALUES ('Пользователь без почты', NULL, 'hash999', 'student');
+    INSERT INTO users (name, email, password)
+    VALUES ('Пользователь без почты', NULL, 'hash999');
 
     RAISE NOTICE '4. NOT NULL: ошибки не произошло — ограничение не сработало!';
 EXCEPTION
@@ -122,13 +137,13 @@ $$;
 
 
 -- Демонстрация ON DELETE RESTRICT 
--- Ограничение: courses.teacher_id REFERENCES users ON DELETE RESTRICT
+-- Ограничение: courses.teacher_id REFERENCES teachers ON DELETE RESTRICT
 -- Бизнес-правило: нельзя удалить преподавателя, пока у него есть курсы —
 -- иначе пропадёт история продаж и выплат.
 
 DO $$
 BEGIN
-    DELETE FROM users WHERE user_id = 1;
+    DELETE FROM teachers WHERE teacher_id = 1;
 
     RAISE NOTICE 'RESTRICT: ошибки не произошло — ограничение не сработало!';
 EXCEPTION
