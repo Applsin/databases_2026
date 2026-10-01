@@ -9,6 +9,19 @@
 
 **2.** `INNER JOIN` выбросит рейс без билетов, поэтому нужен `LEFT JOIN`:
 
+```sql
+SELECT f.flight_id,
+       f.flight_no,
+       COALESCE(SUM(tf.amount), 0)    AS revenue,
+       COUNT(DISTINCT t.passenger_id) AS passengers
+FROM flights f
+LEFT JOIN ticket_flights tf ON tf.flight_id = f.flight_id
+LEFT JOIN tickets t         ON t.ticket_no  = tf.ticket_no
+GROUP BY f.flight_id, f.flight_no;
+```
+
+Для рейса без билетов `tf.amount` будет null, поэтому надо использовать `COALESCE(..., 0)`
+
 ## 3. Отменённые рейсы и города
 
 **1.** `departure_airport` хранит код аэропорта, а не город, а в городе может быть несколько аэропортов. Поэтому сравниваю через `airports`
