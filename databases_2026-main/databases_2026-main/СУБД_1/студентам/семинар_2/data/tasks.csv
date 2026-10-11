@@ -1,0 +1,4 @@
+project_id,assignee_id,title,description,status,priority,estimated_hours,created_date
+1,1,"Разработать макет","Главная страница и каталог",in_progress,high,40,2024-01-20
+1,2,"Настроить сервер","Подготовка продакшн-окружения",done,medium,8,2024-01-25
+2,3,"Дизайн экранов","Фигма-макеты для iOS",new,high,32,2024-03-05
