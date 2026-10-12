@@ -1,0 +1,895 @@
+SELECT flight_no, departure_airport, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND departure_airport IN (SELECT airport_code FROM airports WHERE city = 'Moscow')
+  AND actual_departure >= '2017-08-01' AND actual_departure < '2017-09-01'
+ORDER BY actual_departure;
+ flight_no | departure_airport |    actual_departure    
+-----------+-------------------+------------------------
+ PG0120    | SVO               | 2017-08-01 09:01:00+03
+ PG0239    | DME               | 2017-08-01 09:08:00+03
+ PG0509    | DME               | 2017-08-01 09:15:00+03
+ PG0482    | DME               | 2017-08-01 09:24:00+03
+ PG0269    | VKO               | 2017-08-01 09:28:00+03
+ PG0335    | DME               | 2017-08-01 09:32:00+03
+ PG0405    | DME               | 2017-08-01 09:39:00+03
+ PG0241    | SVO               | 2017-08-01 09:41:00+03
+ PG0677    | SVO               | 2017-08-01 09:42:00+03
+ PG0093    | SVO               | 2017-08-01 09:42:00+03
+   ... (ещё 1903 строк скрыто)
+(1913 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_no, departure_airport, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND departure_airport IN (SELECT airport_code FROM airports WHERE city = 'Moscow')
+  AND actual_departure >= '2017-08-01' AND actual_departure < '2017-09-01'
+ORDER BY actual_departure;
+                                                                                                     QUERY PLAN                                                                                                      
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1990.18..1990.33 rows=59 width=19) (actual time=4.374..4.435 rows=1913 loops=1)
+   Sort Key: flights.actual_departure
+   Sort Method: quicksort  Memory: 138kB
+   Buffers: shared hit=795
+   ->  Hash Join  (cost=30.57..1988.45 rows=59 width=19) (actual time=0.081..4.125 rows=1913 loops=1)
+         Hash Cond: (flights.departure_airport = ml.airport_code)
+         Buffers: shared hit=795
+         ->  Seq Scan on flights  (cost=0.00..1941.12 rows=6133 width=19) (actual time=0.006..3.609 rows=8021 loops=1)
+               Filter: ((actual_departure >= '2017-08-01 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-09-01 00:00:00+03'::timestamp with time zone) AND ((status)::text = 'Arrived'::text))
+               Rows Removed by Filter: 57643
+               Buffers: shared hit=792
+         ->  Hash  (cost=30.56..30.56 rows=1 width=4) (actual time=0.070..0.071 rows=3 loops=1)
+               Buckets: 1024  Batches: 1  Memory Usage: 9kB
+               Buffers: shared hit=3
+               ->  Seq Scan on airports_data ml  (cost=0.00..30.56 rows=1 width=4) (actual time=0.022..0.069 rows=3 loops=1)
+                     Filter: ((city ->> lang()) = 'Moscow'::text)
+                     Rows Removed by Filter: 101
+                     Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=4
+ Planning Time: 0.094 ms
+ Execution Time: 4.528 ms
+(22 rows)
+
+SELECT flight_no, scheduled_arrival, actual_arrival,
+       ROUND(EXTRACT(EPOCH FROM (actual_arrival - scheduled_arrival)) / 60) AS delay_minutes
+FROM flights
+WHERE actual_arrival - scheduled_arrival > INTERVAL '2 hours'
+ORDER BY delay_minutes DESC;
+ flight_no |   scheduled_arrival    |     actual_arrival     | delay_minutes 
+-----------+------------------------+------------------------+---------------
+ PG0531    | 2017-05-17 11:45:00+03 | 2017-05-17 16:26:00+03 |           281
+ PG0132    | 2017-05-22 13:55:00+03 | 2017-05-22 18:36:00+03 |           281
+ PG0589    | 2017-07-29 15:55:00+03 | 2017-07-29 20:32:00+03 |           277
+ PG0364    | 2017-07-19 13:20:00+03 | 2017-07-19 17:49:00+03 |           269
+ PG0151    | 2017-07-03 14:30:00+03 | 2017-07-03 18:57:00+03 |           267
+ PG0337    | 2017-06-01 14:10:00+03 | 2017-06-01 18:36:00+03 |           266
+ PG0354    | 2017-07-03 10:10:00+03 | 2017-07-03 14:36:00+03 |           266
+ PG0544    | 2017-07-06 12:05:00+03 | 2017-07-06 16:31:00+03 |           266
+ PG0164    | 2017-07-29 18:35:00+03 | 2017-07-29 23:00:00+03 |           265
+ PG0635    | 2017-06-24 13:15:00+03 | 2017-06-24 17:39:00+03 |           264
+   ... (ещё 2384 строк скрыто)
+(2394 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_no, scheduled_arrival, actual_arrival,
+       ROUND(EXTRACT(EPOCH FROM (actual_arrival - scheduled_arrival)) / 60) AS delay_minutes
+FROM flights
+WHERE actual_arrival - scheduled_arrival > INTERVAL '2 hours'
+ORDER BY delay_minutes DESC;
+                                                    QUERY PLAN                                                    
+------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=3573.73..3628.45 rows=21888 width=55) (actual time=5.227..5.290 rows=2394 loops=1)
+   Sort Key: (round((EXTRACT(epoch FROM (actual_arrival - scheduled_arrival)) / '60'::numeric), 0)) DESC
+   Sort Method: quicksort  Memory: 227kB
+   Buffers: shared hit=792
+   ->  Seq Scan on flights  (cost=0.00..1995.84 rows=21888 width=55) (actual time=0.009..4.778 rows=2394 loops=1)
+         Filter: ((actual_arrival - scheduled_arrival) > '02:00:00'::interval)
+         Rows Removed by Filter: 63270
+         Buffers: shared hit=792
+ Planning Time: 0.043 ms
+ Execution Time: 5.363 ms
+(10 rows)
+
+SELECT flight_no, COUNT(*) AS flights_count
+FROM flights
+WHERE flight_no LIKE 'PG04%'
+  AND status = 'Arrived'
+GROUP BY flight_no
+ORDER BY flight_no;
+ flight_no | flights_count 
+-----------+---------------
+ PG0400    |            91
+ PG0401    |            91
+ PG0402    |            91
+ PG0403    |            91
+ PG0404    |            90
+ PG0405    |            91
+ PG0406    |            90
+ PG0407    |            91
+ PG0408    |            91
+ PG0409    |            91
+   ... (ещё 90 строк скрыто)
+(100 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_no, COUNT(*) AS flights_count
+FROM flights
+WHERE flight_no LIKE 'PG04%'
+  AND status = 'Arrived'
+GROUP BY flight_no
+ORDER BY flight_no;
+                                                      QUERY PLAN                                                      
+----------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1853.98..1855.75 rows=710 width=15) (actual time=4.371..4.374 rows=100 loops=1)
+   Sort Key: flight_no
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=792
+   ->  HashAggregate  (cost=1813.26..1820.36 rows=710 width=15) (actual time=4.312..4.320 rows=100 loops=1)
+         Group Key: flight_no
+         Batches: 1  Memory Usage: 49kB
+         Buffers: shared hit=792
+         ->  Seq Scan on flights  (cost=0.00..1776.96 rows=7259 width=7) (actual time=0.005..3.703 rows=7284 loops=1)
+               Filter: ((flight_no ~~ 'PG04%'::text) AND ((status)::text = 'Arrived'::text))
+               Rows Removed by Filter: 58380
+               Buffers: shared hit=792
+ Planning Time: 0.038 ms
+ Execution Time: 4.392 ms
+(14 rows)
+
+SELECT departure_airport,
+       COUNT(*) AS flights_count,
+       ROUND(AVG(EXTRACT(EPOCH FROM (actual_arrival - scheduled_arrival)) / 60), 2) AS avg_delay_minutes
+FROM flights
+WHERE status = 'Arrived'
+GROUP BY departure_airport
+HAVING COUNT(*) > 500
+ORDER BY avg_delay_minutes DESC;
+ departure_airport | flights_count | avg_delay_minutes 
+-------------------+---------------+-------------------
+ CEK               |           608 |             15.99
+ IKT               |           546 |             14.38
+ HMA               |           765 |             14.07
+ SVX               |          1026 |             13.89
+ PES               |           531 |             13.70
+ BZK               |           906 |             13.68
+ TJM               |           636 |             13.55
+ OVS               |           817 |             13.41
+ EGO               |           544 |             13.20
+ GOJ               |           530 |             13.12
+   ... (ещё 18 строк скрыто)
+(28 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT departure_airport,
+       COUNT(*) AS flights_count,
+       ROUND(AVG(EXTRACT(EPOCH FROM (actual_arrival - scheduled_arrival)) / 60), 2) AS avg_delay_minutes
+FROM flights
+WHERE status = 'Arrived'
+GROUP BY departure_airport
+HAVING COUNT(*) > 500
+ORDER BY avg_delay_minutes DESC;
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2356.56..2356.64 rows=35 width=44) (actual time=15.698..15.700 rows=28 loops=1)
+   Sort Key: (round(avg((EXTRACT(epoch FROM (actual_arrival - scheduled_arrival)) / '60'::numeric)), 2)) DESC
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=792
+   ->  HashAggregate  (cost=2354.01..2355.66 rows=35 width=44) (actual time=15.670..15.691 rows=28 loops=1)
+         Group Key: departure_airport
+         Filter: (count(*) > 500)
+         Batches: 1  Memory Usage: 80kB
+         Rows Removed by Filter: 76
+         Buffers: shared hit=792
+         ->  Seq Scan on flights  (cost=0.00..1612.80 rows=49414 width=20) (actual time=0.004..4.723 rows=49235 loops=1)
+               Filter: ((status)::text = 'Arrived'::text)
+               Rows Removed by Filter: 16429
+               Buffers: shared hit=792
+ Planning Time: 0.046 ms
+ Execution Time: 15.716 ms
+(16 rows)
+
+SELECT tickets.passenger_name, ticket_flights.amount, flights.flight_no,
+       (SELECT city FROM airports WHERE airport_code = flights.departure_airport) AS city_from,
+       (SELECT city FROM airports WHERE airport_code = flights.arrival_airport) AS city_to
+FROM ticket_flights
+JOIN tickets ON ticket_flights.ticket_no = tickets.ticket_no
+JOIN flights ON ticket_flights.flight_id = flights.flight_id
+ORDER BY ticket_flights.amount DESC
+LIMIT 10;
+   passenger_name    |  amount   | flight_no |   city_from   |    city_to    
+---------------------+-----------+-----------+---------------+---------------
+ ANTON PETROV        | 203300.00 | PG0144    | Moscow        | Petropavlovsk
+ YAKOV CHERNOV       | 203300.00 | PG0144    | Moscow        | Petropavlovsk
+ ANASTASIYA MOROZOVA | 203300.00 | PG0144    | Moscow        | Petropavlovsk
+ RAISA KAZAKOVA      | 203300.00 | PG0144    | Moscow        | Petropavlovsk
+ LYUBOV FROLOVA      | 203300.00 | PG0144    | Moscow        | Petropavlovsk
+ OLGA KOZLOVA        | 203300.00 | PG0144    | Moscow        | Petropavlovsk
+ LIDIYA ZHUKOVA      | 203300.00 | PG0145    | Petropavlovsk | Moscow
+ OLEG MIRONOV        | 203300.00 | PG0145    | Petropavlovsk | Moscow
+ LYUBOV ALEKSANDROVA | 203300.00 | PG0145    | Petropavlovsk | Moscow
+ SERGEY KISELEV      | 203300.00 | PG0145    | Petropavlovsk | Moscow
+(10 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT tickets.passenger_name, ticket_flights.amount, flights.flight_no,
+       (SELECT city FROM airports WHERE airport_code = flights.departure_airport) AS city_from,
+       (SELECT city FROM airports WHERE airport_code = flights.arrival_airport) AS city_to
+FROM ticket_flights
+JOIN tickets ON ticket_flights.ticket_no = tickets.ticket_no
+JOIN flights ON ticket_flights.flight_id = flights.flight_id
+ORDER BY ticket_flights.amount DESC
+LIMIT 10;
+                                                                       QUERY PLAN                                                                        
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=180563.07..180654.25 rows=10 width=93) (actual time=1527.382..1527.499 rows=10 loops=1)
+   Buffers: shared hit=1397 read=33095, temp read=16196 written=16196
+   ->  Result  (cost=180563.07..21700917.43 rows=2360335 width=93) (actual time=1520.681..1520.796 rows=10 loops=1)
+         Buffers: shared hit=1397 read=33095, temp read=16196 written=16196
+         ->  Sort  (cost=180563.07..186463.91 rows=2360335 width=37) (actual time=1520.579..1520.582 rows=10 loops=1)
+               Sort Key: ticket_flights.amount DESC
+               Sort Method: top-N heapsort  Memory: 26kB
+               Buffers: shared hit=1337 read=33095, temp read=16196 written=16196
+               ->  Hash Join  (cost=40511.54..129557.08 rows=2360335 width=37) (actual time=176.256..1257.447 rows=2360335 loops=1)
+                     Hash Cond: (ticket_flights.flight_id = flights.flight_id)
+                     Buffers: shared hit=1337 read=33095, temp read=16196 written=16196
+                     ->  Hash Join  (cost=38242.10..121091.36 rows=2360335 width=26) (actual time=166.357..959.348 rows=2360335 loops=1)
+                           Hash Cond: (ticket_flights.ticket_no = tickets.ticket_no)
+                           Buffers: shared hit=545 read=33095, temp read=16196 written=16196
+                           ->  Seq Scan on ticket_flights  (cost=0.00..43323.35 rows=2360335 width=24) (actual time=0.065..131.775 rows=2360335 loops=1)
+                                 Buffers: shared hit=353 read=19367
+                           ->  Hash  (cost=22210.71..22210.71 rows=829071 width=30) (actual time=165.864..165.864 rows=829071 loops=1)
+                                 Buckets: 131072  Batches: 8  Memory Usage: 7319kB
+                                 Buffers: shared hit=192 read=13728, temp written=4434
+                                 ->  Seq Scan on tickets  (cost=0.00..22210.71 rows=829071 width=30) (actual time=0.011..56.128 rows=829071 loops=1)
+                                       Buffers: shared hit=192 read=13728
+                     ->  Hash  (cost=1448.64..1448.64 rows=65664 width=19) (actual time=9.643..9.643 rows=65664 loops=1)
+                           Buckets: 131072  Batches: 1  Memory Usage: 4359kB
+                           Buffers: shared hit=792
+                           ->  Seq Scan on flights  (cost=0.00..1448.64 rows=65664 width=19) (actual time=0.015..3.548 rows=65664 loops=1)
+                                 Buffers: shared hit=792
+         SubPlan 1
+           ->  Seq Scan on airports_data ml  (cost=0.00..4.55 rows=1 width=32) (actual time=0.006..0.010 rows=1 loops=10)
+                 Filter: (airport_code = flights.departure_airport)
+                 Rows Removed by Filter: 103
+                 Buffers: shared hit=30
+         SubPlan 2
+           ->  Seq Scan on airports_data ml_1  (cost=0.00..4.55 rows=1 width=32) (actual time=0.004..0.008 rows=1 loops=10)
+                 Filter: (airport_code = flights.arrival_airport)
+                 Rows Removed by Filter: 103
+                 Buffers: shared hit=30
+ Planning:
+   Buffers: shared hit=22
+ Planning Time: 0.210 ms
+ JIT:
+   Functions: 33
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 0.522 ms, Inlining 0.000 ms, Optimization 0.323 ms, Emission 6.453 ms, Total 7.298 ms
+ Execution Time: 1528.480 ms
+(44 rows)
+
+SELECT airports.airport_code, airports.airport_name, COUNT(flights.flight_id) AS flights_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.departure_airport
+GROUP BY airports.airport_code, airports.airport_name
+ORDER BY flights_count DESC;
+ airport_code |                  airport_name                  | flights_count 
+--------------+------------------------------------------------+---------------
+ DME          | Domodedovo International Airport               |          6376
+ SVO          | Sheremetyevo International Airport             |          5912
+ LED          | Pulkovo Airport                                |          3769
+ VKO          | Vnukovo International Airport                  |          3405
+ OVB          | Tolmachevo Airport                             |          2091
+ KJA          | Yemelyanovo Airport                            |          1401
+ SVX          | Koltsovo Airport                               |          1367
+ PEE          | Bolshoye Savino Airport                        |          1228
+ ROV          | Rostov-on-Don Airport                          |          1227
+ BZK          | Bryansk Airport                                |          1210
+   ... (ещё 94 строк скрыто)
+(104 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT airports.airport_code, airports.airport_name, COUNT(flights.flight_id) AS flights_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.departure_airport
+GROUP BY airports.airport_code, airports.airport_name
+ORDER BY flights_count DESC;
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=18736.79..18737.05 rows=104 width=44) (actual time=54.063..54.068 rows=104 loops=1)
+   Sort Key: (count(flights.flight_id)) DESC
+   Sort Method: quicksort  Memory: 31kB
+   Buffers: shared hit=795
+   ->  HashAggregate  (cost=18706.01..18733.31 rows=104 width=44) (actual time=54.042..54.049 rows=104 loops=1)
+         Group Key: ml.airport_code, (ml.airport_name ->> lang())
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=795
+         ->  Hash Right Join  (cost=5.34..18213.53 rows=65664 width=40) (actual time=0.028..45.872 rows=65664 loops=1)
+               Hash Cond: (flights.departure_airport = ml.airport_code)
+               Buffers: shared hit=795
+               ->  Seq Scan on flights  (cost=0.00..1448.64 rows=65664 width=8) (actual time=0.001..2.637 rows=65664 loops=1)
+                     Buffers: shared hit=792
+               ->  Hash  (cost=4.04..4.04 rows=104 width=65) (actual time=0.017..0.018 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                     Buffers: shared hit=3
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=65) (actual time=0.003..0.009 rows=104 loops=1)
+                           Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=4
+ Planning Time: 0.108 ms
+ Execution Time: 54.093 ms
+(22 rows)
+
+SELECT tickets.passenger_id, tickets.passenger_name, COUNT(*) AS flights_count, SUM(ticket_flights.amount) AS total
+FROM tickets
+JOIN ticket_flights ON tickets.ticket_no = ticket_flights.ticket_no
+GROUP BY tickets.passenger_id, tickets.passenger_name
+ORDER BY total DESC
+LIMIT 5;
+ passenger_id |   passenger_name   | flights_count |   total   
+--------------+--------------------+---------------+-----------
+ 2034 201228  | ANTONINA KUZNECOVA |             6 | 529500.00
+ 3272 478491  | EKATERINA LAZAREVA |             6 | 506700.00
+ 6615 949899  | ELENA VASILEVA     |             6 | 505500.00
+ 7989 541468  | EVGENIY TARASOV    |             6 | 495300.00
+ 4805 339011  | DMITRIY KUZMIN     |             6 | 494700.00
+(5 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT tickets.passenger_id, tickets.passenger_name, COUNT(*) AS flights_count, SUM(ticket_flights.amount) AS total
+FROM tickets
+JOIN ticket_flights ON tickets.ticket_no = ticket_flights.ticket_no
+GROUP BY tickets.passenger_id, tickets.passenger_name
+ORDER BY total DESC
+LIMIT 5;
+                                                                    QUERY PLAN                                                                     
+---------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=403674.54..403674.55 rows=5 width=68) (actual time=2078.816..2078.818 rows=5 loops=1)
+   Buffers: shared hit=673 read=32967, temp read=32216 written=47725
+   ->  Sort  (cost=403674.54..405747.22 rows=829071 width=68) (actual time=2074.901..2074.903 rows=5 loops=1)
+         Sort Key: (sum(ticket_flights.amount)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         Buffers: shared hit=673 read=32967, temp read=32216 written=47725
+         ->  HashAggregate  (cost=342660.35..389903.97 rows=829071 width=68) (actual time=1463.983..1979.183 rows=829071 loops=1)
+               Group Key: tickets.passenger_id, tickets.passenger_name
+               Planned Partitions: 64  Batches: 65  Memory Usage: 8209kB  Disk Usage: 126880kB
+               Buffers: shared hit=673 read=32967, temp read=32216 written=47725
+               ->  Hash Join  (cost=39861.10..124329.36 rows=2360335 width=34) (actual time=225.227..998.419 rows=2360335 loops=1)
+                     Hash Cond: (ticket_flights.ticket_no = tickets.ticket_no)
+                     Buffers: shared hit=673 read=32967, temp read=16797 written=16797
+                     ->  Seq Scan on ticket_flights  (cost=0.00..43323.35 rows=2360335 width=20) (actual time=0.056..131.715 rows=2360335 loops=1)
+                           Buffers: shared hit=417 read=19303
+                     ->  Hash  (cost=22210.71..22210.71 rows=829071 width=42) (actual time=224.716..224.717 rows=829071 loops=1)
+                           Buckets: 131072  Batches: 16  Memory Usage: 4780kB
+                           Buffers: shared hit=256 read=13664, temp written=5888
+                           ->  Seq Scan on tickets  (cost=0.00..22210.71 rows=829071 width=42) (actual time=0.011..58.583 rows=829071 loops=1)
+                                 Buffers: shared hit=256 read=13664
+ Planning:
+   Buffers: shared hit=18
+ Planning Time: 0.145 ms
+ JIT:
+   Functions: 18
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 0.490 ms, Inlining 0.000 ms, Optimization 0.355 ms, Emission 6.088 ms, Total 6.932 ms
+ Execution Time: 2086.741 ms
+(28 rows)
+
+SELECT EXTRACT(MONTH FROM book_date) AS month, SUM(total_amount) AS revenue
+FROM bookings
+WHERE EXTRACT(YEAR FROM book_date) = 2017
+GROUP BY ROLLUP (EXTRACT(MONTH FROM book_date))
+HAVING SUM(total_amount) > 10000000000
+    OR EXTRACT(MONTH FROM book_date) IS NULL
+ORDER BY month;
+ month |    revenue     
+-------+----------------
+     5 | 12968141200.00
+     6 | 13091987500.00
+     7 | 13609642400.00
+       | 47004388200.00
+(4 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT EXTRACT(MONTH FROM book_date) AS month, SUM(total_amount) AS revenue
+FROM bookings
+WHERE EXTRACT(YEAR FROM book_date) = 2017
+GROUP BY ROLLUP (EXTRACT(MONTH FROM book_date))
+HAVING SUM(total_amount) > 10000000000
+    OR EXTRACT(MONTH FROM book_date) IS NULL
+ORDER BY month;
+                                                                QUERY PLAN                                                                
+------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=8599.55..9013.88 rows=990 width=64) (actual time=130.164..230.834 rows=4 loops=1)
+   Group Key: (EXTRACT(month FROM book_date))
+   Group Key: ()
+   Filter: ((sum(total_amount) > '10000000000'::numeric) OR ((EXTRACT(month FROM book_date)) IS NULL))
+   Rows Removed by Filter: 2
+   Buffers: shared hit=3936, temp read=2474 written=2483
+   ->  Gather Merge  (cost=8599.55..8945.10 rows=2967 width=46) (actual time=89.931..171.685 rows=593433 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=3936, temp read=2474 written=2483
+         ->  Sort  (cost=7599.52..7602.61 rows=1236 width=46) (actual time=80.691..96.764 rows=197811 loops=3)
+               Sort Key: (EXTRACT(month FROM book_date))
+               Sort Method: external merge  Disk: 7520kB
+               Buffers: shared hit=3936, temp read=2474 written=2483
+               Worker 0:  Sort Method: external merge  Disk: 6256kB
+               Worker 1:  Sort Method: external merge  Disk: 6016kB
+               ->  Parallel Seq Scan on bookings  (cost=0.00..7536.05 rows=1236 width=46) (actual time=0.008..50.686 rows=197811 loops=3)
+                     Filter: (EXTRACT(year FROM book_date) = '2017'::numeric)
+                     Buffers: shared hit=3824
+ Planning Time: 0.055 ms
+ Execution Time: 231.310 ms
+(21 rows)
+
+SELECT EXTRACT(MONTH FROM book_date) AS month, SUM(total_amount) AS revenue
+FROM bookings
+WHERE EXTRACT(YEAR FROM book_date) = 2017
+GROUP BY ROLLUP (EXTRACT(MONTH FROM book_date))
+ORDER BY month;
+ month |    revenue     
+-------+----------------
+     4 |   359249000.00
+     5 | 12968141200.00
+     6 | 13091987500.00
+     7 | 13609642400.00
+     8 |  6975368100.00
+       | 47004388200.00
+(6 rows)
+
+SELECT airports.airport_code, airports.airport_name, COUNT(flights.flight_id) AS arrived_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.arrival_airport AND flights.status = 'Arrived'
+GROUP BY airports.airport_code, airports.airport_name
+ORDER BY arrived_count;
+ airport_code |                  airport_name                  | arrived_count 
+--------------+------------------------------------------------+---------------
+ USK          | Usinsk Airport                                 |            26
+ KXK          | Komsomolsk-on-Amur Airport                     |            26
+ NYA          | Nyagan Airport                                 |            39
+ PKC          | Yelizovo Airport                               |            39
+ PYJ          | Polyarny Airport                               |            39
+ DYR          | Ugolny Airport                                 |            51
+ GDX          | Sokol Airport                                  |            52
+ IWA          | Ivanovo South Airport                          |            52
+ KYZ          | Kyzyl Airport                                  |            65
+ NFG          | Nefteyugansk Airport                           |            65
+   ... (ещё 94 строк скрыто)
+(104 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT airports.airport_code, airports.airport_name, COUNT(flights.flight_id) AS arrived_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.arrival_airport AND flights.status = 'Arrived'
+GROUP BY airports.airport_code, airports.airport_name
+ORDER BY arrived_count;
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=14631.56..14631.82 rows=104 width=44) (actual time=44.399..44.403 rows=104 loops=1)
+   Sort Key: (count(flights.flight_id))
+   Sort Method: quicksort  Memory: 31kB
+   Buffers: shared hit=795
+   ->  HashAggregate  (cost=14600.78..14628.08 rows=104 width=44) (actual time=44.377..44.384 rows=104 loops=1)
+         Group Key: ml.airport_code, (ml.airport_name ->> lang())
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=795
+         ->  Hash Right Join  (cost=5.34..14230.17 rows=49414 width=40) (actual time=0.028..37.899 rows=49235 loops=1)
+               Hash Cond: (flights.arrival_airport = ml.airport_code)
+               Buffers: shared hit=795
+               ->  Seq Scan on flights  (cost=0.00..1612.80 rows=49414 width=8) (actual time=0.003..5.193 rows=49235 loops=1)
+                     Filter: ((status)::text = 'Arrived'::text)
+                     Rows Removed by Filter: 16429
+                     Buffers: shared hit=792
+               ->  Hash  (cost=4.04..4.04 rows=104 width=65) (actual time=0.017..0.017 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                     Buffers: shared hit=3
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=65) (actual time=0.002..0.008 rows=104 loops=1)
+                           Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=4
+ Planning Time: 0.120 ms
+ Execution Time: 44.429 ms
+(24 rows)
+
+SELECT airports.airport_code, airports.airport_name, COUNT(flights.flight_id) AS arrived_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.arrival_airport
+WHERE flights.status = 'Arrived'
+GROUP BY airports.airport_code, airports.airport_name
+ORDER BY arrived_count;
+ airport_code |                  airport_name                  | arrived_count 
+--------------+------------------------------------------------+---------------
+ USK          | Usinsk Airport                                 |            26
+ KXK          | Komsomolsk-on-Amur Airport                     |            26
+ NYA          | Nyagan Airport                                 |            39
+ PKC          | Yelizovo Airport                               |            39
+ PYJ          | Polyarny Airport                               |            39
+ DYR          | Ugolny Airport                                 |            51
+ GDX          | Sokol Airport                                  |            52
+ IWA          | Ivanovo South Airport                          |            52
+ KYZ          | Kyzyl Airport                                  |            65
+ NFG          | Nefteyugansk Airport                           |            65
+   ... (ещё 94 строк скрыто)
+(104 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT airports.airport_code, airports.airport_name, COUNT(flights.flight_id) AS arrived_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.arrival_airport
+WHERE flights.status = 'Arrived'
+GROUP BY airports.airport_code, airports.airport_name
+ORDER BY arrived_count;
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=14631.56..14631.82 rows=104 width=44) (actual time=42.472..42.476 rows=104 loops=1)
+   Sort Key: (count(flights.flight_id))
+   Sort Method: quicksort  Memory: 31kB
+   Buffers: shared hit=795
+   ->  HashAggregate  (cost=14600.78..14628.08 rows=104 width=44) (actual time=42.450..42.458 rows=104 loops=1)
+         Group Key: ml.airport_code, (ml.airport_name ->> lang())
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=795
+         ->  Hash Join  (cost=5.34..14230.17 rows=49414 width=40) (actual time=0.047..36.262 rows=49235 loops=1)
+               Hash Cond: (flights.arrival_airport = ml.airport_code)
+               Buffers: shared hit=795
+               ->  Seq Scan on flights  (cost=0.00..1612.80 rows=49414 width=8) (actual time=0.004..4.981 rows=49235 loops=1)
+                     Filter: ((status)::text = 'Arrived'::text)
+                     Rows Removed by Filter: 16429
+                     Buffers: shared hit=792
+               ->  Hash  (cost=4.04..4.04 rows=104 width=65) (actual time=0.033..0.033 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                     Buffers: shared hit=3
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=65) (actual time=0.001..0.007 rows=104 loops=1)
+                           Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=4
+ Planning Time: 0.120 ms
+ Execution Time: 42.501 ms
+(24 rows)
+
+SELECT airports.airport_code, COUNT(flights.flight_id) AS cancelled_count, COUNT(*) AS count_all
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.arrival_airport AND flights.status = 'Cancelled'
+GROUP BY airports.airport_code
+ORDER BY cancelled_count;
+ airport_code | cancelled_count | count_all 
+--------------+-----------------+-----------
+ DYR          |               0 |         1
+ URJ          |               0 |         1
+ KRR          |               1 |         1
+ PKC          |               1 |         1
+ UUD          |               1 |         1
+ UKX          |               1 |         1
+ KUF          |               1 |         1
+ KXK          |               1 |         1
+ SCW          |               1 |         1
+ VOZ          |               1 |         1
+   ... (ещё 94 строк скрыто)
+(104 rows)
+
+SELECT airports.airport_code, COUNT(flights.flight_id) AS cancelled_count
+FROM airports
+LEFT JOIN flights ON airports.airport_code = flights.arrival_airport
+WHERE flights.status = 'Cancelled'
+GROUP BY airports.airport_code
+ORDER BY cancelled_count;
+ airport_code | cancelled_count 
+--------------+-----------------
+ SWT          |               1
+ BQS          |               1
+ USK          |               1
+ UUD          |               1
+ KRR          |               1
+ PKC          |               1
+ KUF          |               1
+ UKX          |               1
+ VVO          |               1
+ SCW          |               1
+   ... (ещё 92 строк скрыто)
+(102 rows)
+
+SELECT flight_id, flight_no, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND EXTRACT(YEAR FROM actual_departure) = 2017
+  AND EXTRACT(MONTH FROM actual_departure) = 8
+  AND EXTRACT(DOW FROM actual_departure) IN (0, 6)
+ORDER BY actual_departure;
+ flight_id | flight_no |    actual_departure    
+-----------+-----------+------------------------
+     52954 | PG0328    | 2017-08-05 02:50:00+03
+     31201 | PG0244    | 2017-08-05 03:22:00+03
+     52510 | PG0088    | 2017-08-05 03:25:00+03
+     39604 | PG0037    | 2017-08-05 03:41:00+03
+     35961 | PG0398    | 2017-08-05 03:52:00+03
+     52879 | PG0660    | 2017-08-05 03:57:00+03
+     50068 | PG0199    | 2017-08-05 04:38:00+03
+     49887 | PG0654    | 2017-08-05 05:04:00+03
+     52031 | PG0357    | 2017-08-05 05:08:00+03
+     64481 | PG0069    | 2017-08-05 05:09:00+03
+   ... (ещё 2241 строк скрыто)
+(2251 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_id, flight_no, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND EXTRACT(YEAR FROM actual_departure) = 2017
+  AND EXTRACT(MONTH FROM actual_departure) = 8
+  AND EXTRACT(DOW FROM actual_departure) IN (0, 6)
+ORDER BY actual_departure;
+                                                                                                                   QUERY PLAN                                                                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2597.77..2597.78 rows=1 width=19) (actual time=12.466..12.549 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=792
+   ->  Seq Scan on flights  (cost=0.00..2597.76 rows=1 width=19) (actual time=0.013..12.189 rows=2251 loops=1)
+         Filter: (((status)::text = 'Arrived'::text) AND (EXTRACT(dow FROM actual_departure) = ANY ('{0,6}'::numeric[])) AND (EXTRACT(year FROM actual_departure) = '2017'::numeric) AND (EXTRACT(month FROM actual_departure) = '8'::numeric))
+         Rows Removed by Filter: 63413
+         Buffers: shared hit=792
+ Planning Time: 0.047 ms
+ Execution Time: 12.645 ms
+(10 rows)
+
+SELECT flight_id, flight_no, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND ((actual_departure >= '2017-08-05' AND actual_departure < '2017-08-07')
+    OR (actual_departure >= '2017-08-12' AND actual_departure < '2017-08-14')
+    OR (actual_departure >= '2017-08-19' AND actual_departure < '2017-08-21')
+    OR (actual_departure >= '2017-08-26' AND actual_departure < '2017-08-28'))
+ORDER BY actual_departure;
+ flight_id | flight_no |    actual_departure    
+-----------+-----------+------------------------
+     52954 | PG0328    | 2017-08-05 02:50:00+03
+     31201 | PG0244    | 2017-08-05 03:22:00+03
+     52510 | PG0088    | 2017-08-05 03:25:00+03
+     39604 | PG0037    | 2017-08-05 03:41:00+03
+     35961 | PG0398    | 2017-08-05 03:52:00+03
+     52879 | PG0660    | 2017-08-05 03:57:00+03
+     50068 | PG0199    | 2017-08-05 04:38:00+03
+     49887 | PG0654    | 2017-08-05 05:04:00+03
+     52031 | PG0357    | 2017-08-05 05:08:00+03
+     64481 | PG0069    | 2017-08-05 05:09:00+03
+   ... (ещё 2241 строк скрыто)
+(2251 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_id, flight_no, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND ((actual_departure >= '2017-08-05' AND actual_departure < '2017-08-07')
+    OR (actual_departure >= '2017-08-12' AND actual_departure < '2017-08-14')
+    OR (actual_departure >= '2017-08-19' AND actual_departure < '2017-08-21')
+    OR (actual_departure >= '2017-08-26' AND actual_departure < '2017-08-28'))
+ORDER BY actual_departure;
+                                                                                                                                                                                                                                                                                                                                           QUERY PLAN                                                                                                                                                                                                                                                                                                                                            
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=3013.89..3018.00 rows=1644 width=19) (actual time=4.764..4.828 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=792
+   ->  Seq Scan on flights  (cost=0.00..2926.08 rows=1644 width=19) (actual time=0.008..4.506 rows=2251 loops=1)
+         Filter: (((status)::text = 'Arrived'::text) AND (((actual_departure >= '2017-08-05 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-07 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-12 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-14 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-19 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-21 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-26 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-28 00:00:00+03'::timestamp with time zone))))
+         Rows Removed by Filter: 63413
+         Buffers: shared hit=792
+ Planning Time: 0.045 ms
+ Execution Time: 4.884 ms
+(10 rows)
+
+CREATE INDEX idx_flights_actual_departure ON flights(actual_departure);
+CREATE INDEX
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_id, flight_no, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND EXTRACT(YEAR FROM actual_departure) = 2017
+  AND EXTRACT(MONTH FROM actual_departure) = 8
+  AND EXTRACT(DOW FROM actual_departure) IN (0, 6)
+ORDER BY actual_departure;
+                                                                                                                   QUERY PLAN                                                                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2597.77..2597.78 rows=1 width=19) (actual time=12.777..12.849 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=792
+   ->  Seq Scan on flights  (cost=0.00..2597.76 rows=1 width=19) (actual time=0.016..12.474 rows=2251 loops=1)
+         Filter: (((status)::text = 'Arrived'::text) AND (EXTRACT(dow FROM actual_departure) = ANY ('{0,6}'::numeric[])) AND (EXTRACT(year FROM actual_departure) = '2017'::numeric) AND (EXTRACT(month FROM actual_departure) = '8'::numeric))
+         Rows Removed by Filter: 63413
+         Buffers: shared hit=792
+ Planning:
+   Buffers: shared hit=16 read=1
+ Planning Time: 0.123 ms
+ Execution Time: 12.914 ms
+(12 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_id, flight_no, actual_departure
+FROM flights
+WHERE status = 'Arrived'
+  AND ((actual_departure >= '2017-08-05' AND actual_departure < '2017-08-07')
+    OR (actual_departure >= '2017-08-12' AND actual_departure < '2017-08-14')
+    OR (actual_departure >= '2017-08-19' AND actual_departure < '2017-08-21')
+    OR (actual_departure >= '2017-08-26' AND actual_departure < '2017-08-28'))
+ORDER BY actual_departure;
+                                                                                                                                                                                                                                                                                                                          QUERY PLAN                                                                                                                                                                                                                                                                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1008.23..1012.34 rows=1644 width=19) (actual time=0.977..1.038 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=759 read=8
+   ->  Bitmap Heap Scan on flights  (cost=56.85..920.42 rows=1644 width=19) (actual time=0.156..0.729 rows=2251 loops=1)
+         Recheck Cond: (((actual_departure >= '2017-08-05 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-07 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-12 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-14 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-19 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-21 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-26 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-28 00:00:00+03'::timestamp with time zone)))
+         Filter: ((status)::text = 'Arrived'::text)
+         Rows Removed by Filter: 1
+         Heap Blocks: exact=753
+         Buffers: shared hit=759 read=8
+         ->  BitmapOr  (cost=56.85..56.85 rows=2202 width=0) (actual time=0.105..0.105 rows=0 loops=1)
+               Buffers: shared hit=6 read=8
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..23.09 rows=1080 width=0) (actual time=0.059..0.059 rows=1126 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-05 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-07 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=1 read=4
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..23.51 rows=1122 width=0) (actual time=0.044..0.044 rows=1126 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-12 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-14 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=1 read=4
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..4.30 rows=1 width=0) (actual time=0.001..0.001 rows=0 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-19 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-21 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=2
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..4.30 rows=1 width=0) (actual time=0.001..0.001 rows=0 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-26 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-28 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=10 read=2
+ Planning Time: 0.101 ms
+ Execution Time: 1.099 ms
+(28 rows)
+
+DROP INDEX idx_flights_actual_departure;
+DROP INDEX
+SELECT flight_id, flight_no, scheduled_departure
+FROM flights
+WHERE flight_id NOT IN (SELECT flight_id FROM ticket_flights WHERE fare_conditions = 'Business');
+ flight_id | flight_no |  scheduled_departure   
+-----------+-----------+------------------------
+       182 | PG0402    | 2017-09-01 12:25:00+03
+      1996 | PG0335    | 2017-08-26 09:30:00+03
+      8136 | PG0138    | 2017-08-28 10:15:00+03
+     11531 | PG0456    | 2017-08-16 16:15:00+03
+     13774 | PG0460    | 2017-08-25 14:30:00+03
+     16088 | PG0407    | 2017-08-20 12:10:00+03
+     19239 | PG0077    | 2017-09-04 17:45:00+03
+     24052 | PG0675    | 2017-09-05 11:40:00+03
+     26288 | PG0693    | 2017-08-19 10:00:00+03
+     29190 | PG0590    | 2017-08-19 17:50:00+03
+   ... (ещё 41695 строк скрыто)
+(41705 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_id, flight_no, scheduled_departure
+FROM flights
+WHERE flight_id NOT IN (SELECT flight_id FROM ticket_flights WHERE fare_conditions = 'Business');
+                                                          QUERY PLAN                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ Seq Scan on flights  (cost=49833.35..51446.15 rows=32832 width=19) (actual time=125.045..136.168 rows=41705 loops=1)
+   Filter: (NOT (hashed SubPlan 1))
+   Rows Removed by Filter: 23959
+   Buffers: shared hit=1273 read=19239
+   SubPlan 1
+     ->  Seq Scan on ticket_flights  (cost=0.00..49224.19 rows=243665 width=4) (actual time=0.027..97.966 rows=242204 loops=1)
+           Filter: ((fare_conditions)::text = 'Business'::text)
+           Rows Removed by Filter: 2118131
+           Buffers: shared hit=481 read=19239
+ Planning Time: 0.053 ms
+ Execution Time: 137.116 ms
+(11 rows)
+
+SELECT flight_id, flight_no, scheduled_departure
+FROM flights
+WHERE NOT EXISTS (SELECT 1 FROM ticket_flights
+                  WHERE ticket_flights.flight_id = flights.flight_id AND fare_conditions = 'Business');
+ flight_id | flight_no |  scheduled_departure   
+-----------+-----------+------------------------
+      2026 | PG0335    | 2017-08-24 09:30:00+03
+     46770 | PG0648    | 2017-06-11 11:35:00+03
+     59315 | PG0385    | 2017-08-28 19:30:00+03
+     55290 | PG0354    | 2017-06-18 08:45:00+03
+     56414 | PG0431    | 2017-05-29 15:55:00+03
+     49059 | PG0111    | 2017-06-05 16:20:00+03
+     28365 | PG0653    | 2017-06-03 11:25:00+03
+     23772 | PG0621    | 2017-07-17 16:05:00+03
+      9243 | PG0234    | 2017-08-05 15:15:00+03
+     39349 | PG0555    | 2017-07-13 09:30:00+03
+   ... (ещё 41695 строк скрыто)
+(41705 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT flight_id, flight_no, scheduled_departure
+FROM flights
+WHERE NOT EXISTS (SELECT 1 FROM ticket_flights
+                  WHERE ticket_flights.flight_id = flights.flight_id AND fare_conditions = 'Business');
+                                                         QUERY PLAN                                                          
+-----------------------------------------------------------------------------------------------------------------------------
+ Hash Right Anti Join  (cost=2269.44..53275.91 rows=37985 width=19) (actual time=123.088..126.612 rows=41705 loops=1)
+   Hash Cond: (ticket_flights.flight_id = flights.flight_id)
+   Buffers: shared hit=1337 read=19175
+   ->  Seq Scan on ticket_flights  (cost=0.00..49224.19 rows=243665 width=4) (actual time=0.035..95.227 rows=242204 loops=1)
+         Filter: ((fare_conditions)::text = 'Business'::text)
+         Rows Removed by Filter: 2118131
+         Buffers: shared hit=545 read=19175
+   ->  Hash  (cost=1448.64..1448.64 rows=65664 width=19) (actual time=8.518..8.520 rows=65664 loops=1)
+         Buckets: 131072  Batches: 1  Memory Usage: 4615kB
+         Buffers: shared hit=792
+         ->  Seq Scan on flights  (cost=0.00..1448.64 rows=65664 width=19) (actual time=0.006..3.555 rows=65664 loops=1)
+               Buffers: shared hit=792
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.095 ms
+ Execution Time: 127.551 ms
+(16 rows)
+
+SELECT COUNT(*)
+FROM flights
+WHERE flight_id NOT IN (SELECT flight_id FROM ticket_flights WHERE fare_conditions = 'Business'
+                        UNION ALL
+                        SELECT NULL);
+ count 
+-------
+     0
+(1 row)
+
+SELECT status, COUNT(*) FROM flights GROUP BY status;
+  status   | count 
+-----------+-------
+ Departed  |    58
+ Arrived   | 49235
+ On Time   |   518
+ Cancelled |   429
+ Delayed   |    41
+ Scheduled | 15383
+(6 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT status, COUNT(*) FROM flights GROUP BY status;
+                                                    QUERY PLAN                                                    
+------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=1776.96..1777.02 rows=6 width=16) (actual time=8.113..8.114 rows=6 loops=1)
+   Group Key: status
+   Batches: 1  Memory Usage: 24kB
+   Buffers: shared hit=792
+   ->  Seq Scan on flights  (cost=0.00..1448.64 rows=65664 width=8) (actual time=0.002..2.087 rows=65664 loops=1)
+         Buffers: shared hit=792
+ Planning Time: 0.042 ms
+ Execution Time: 8.127 ms
+(8 rows)
+
+CREATE INDEX idx_flights_status ON flights(status);
+CREATE INDEX
+VACUUM flights;
+VACUUM
+SELECT status, COUNT(*) FROM flights GROUP BY status;
+  status   | count 
+-----------+-------
+ Arrived   | 49235
+ Cancelled |   429
+ Delayed   |    41
+ Departed  |    58
+ On Time   |   518
+ Scheduled | 15383
+(6 rows)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT status, COUNT(*) FROM flights GROUP BY status;
+                                                                    QUERY PLAN                                                                    
+--------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=0.29..1545.63 rows=6 width=16) (actual time=3.971..5.237 rows=6 loops=1)
+   Group Key: status
+   Buffers: shared hit=58
+   ->  Index Only Scan using idx_flights_status on flights  (cost=0.29..1217.25 rows=65664 width=8) (actual time=0.004..2.339 rows=65664 loops=1)
+         Heap Fetches: 0
+         Buffers: shared hit=58
+ Planning Time: 0.024 ms
+ Execution Time: 5.245 ms
+(8 rows)
+
