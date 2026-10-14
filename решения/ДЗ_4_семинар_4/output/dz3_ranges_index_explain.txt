@@ -1,0 +1,38 @@
+                                                                                                                                                                                                                                                                                                                          QUERY PLAN                                                                                                                                                                                                                                                                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1058.45..1062.77 rows=1727 width=19) (actual time=9.399..9.538 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=9 read=761
+   I/O Timings: shared read=6.479
+   ->  Bitmap Heap Scan on flights  (cost=58.13..965.59 rows=1727 width=19) (actual time=1.049..8.712 rows=2251 loops=1)
+         Recheck Cond: (((actual_departure >= '2017-08-05 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-07 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-12 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-14 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-19 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-21 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-26 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-28 00:00:00+03'::timestamp with time zone)))
+         Filter: ((status)::text = 'Arrived'::text)
+         Rows Removed by Filter: 1
+         Heap Blocks: exact=753
+         Buffers: shared hit=6 read=761
+         I/O Timings: shared read=6.479
+         ->  BitmapOr  (cost=58.13..58.13 rows=2322 width=0) (actual time=0.666..0.668 rows=0 loops=1)
+               Buffers: shared hit=6 read=8
+               I/O Timings: shared read=0.337
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..25.26 rows=1297 width=0) (actual time=0.360..0.360 rows=1126 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-05 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-07 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=1 read=4
+                     I/O Timings: shared read=0.229
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..22.53 rows=1024 width=0) (actual time=0.170..0.171 rows=1126 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-12 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-14 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=1 read=4
+                     I/O Timings: shared read=0.107
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..4.30 rows=1 width=0) (actual time=0.003..0.003 rows=0 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-19 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-21 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=2
+               ->  Bitmap Index Scan on idx_flights_actual_departure  (cost=0.00..4.30 rows=1 width=0) (actual time=0.001..0.001 rows=0 loops=1)
+                     Index Cond: ((actual_departure >= '2017-08-26 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-28 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=117 read=27
+   I/O Timings: shared read=2.546
+ Planning Time: 4.887 ms
+ Execution Time: 10.166 ms
+(34 rows)
+

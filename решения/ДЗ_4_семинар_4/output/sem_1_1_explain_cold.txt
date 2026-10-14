@@ -1,0 +1,32 @@
+                                                                                                     QUERY PLAN                                                                                                      
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2030.18..2030.32 rows=59 width=19) (actual time=18.519..18.689 rows=1913 loops=1)
+   Sort Key: f.actual_departure
+   Sort Method: quicksort  Memory: 138kB
+   Buffers: shared hit=11 read=844
+   I/O Timings: shared read=9.915
+   ->  Hash Join  (cost=30.57..2028.44 rows=59 width=19) (actual time=3.364..18.002 rows=1913 loops=1)
+         Hash Cond: (f.departure_airport = ml.airport_code)
+         Buffers: shared hit=8 read=844
+         I/O Timings: shared read=9.915
+         ->  Seq Scan on flights f  (cost=0.00..1981.12 rows=6130 width=19) (actual time=0.283..13.977 rows=8021 loops=1)
+               Filter: ((actual_departure >= '2017-08-01 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-09-01 00:00:00+03'::timestamp with time zone) AND ((status)::text = 'Arrived'::text))
+               Rows Removed by Filter: 57643
+               Buffers: shared read=832
+               I/O Timings: shared read=7.584
+         ->  Hash  (cost=30.56..30.56 rows=1 width=4) (actual time=3.060..3.062 rows=3 loops=1)
+               Buckets: 1024  Batches: 1  Memory Usage: 9kB
+               Buffers: shared hit=8 read=12
+               I/O Timings: shared read=2.331
+               ->  Seq Scan on airports_data ml  (cost=0.00..30.56 rows=1 width=4) (actual time=2.882..3.047 rows=3 loops=1)
+                     Filter: ((city ->> lang()) = 'Moscow'::text)
+                     Rows Removed by Filter: 101
+                     Buffers: shared hit=8 read=12
+                     I/O Timings: shared read=2.331
+ Planning:
+   Buffers: shared hit=195 read=31 dirtied=1
+   I/O Timings: shared read=3.413
+ Planning Time: 6.603 ms
+ Execution Time: 20.711 ms
+(28 rows)
+

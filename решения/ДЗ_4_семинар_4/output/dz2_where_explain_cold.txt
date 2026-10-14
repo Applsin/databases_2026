@@ -1,0 +1,35 @@
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=14667.10..14667.36 rows=104 width=44) (actual time=95.681..95.688 rows=104 loops=1)
+   Sort Key: (count(f.flight_id)) DESC, ml.airport_code
+   Sort Method: quicksort  Memory: 31kB
+   Buffers: shared hit=19 read=837
+   I/O Timings: shared read=8.508
+   ->  HashAggregate  (cost=14636.31..14663.61 rows=104 width=44) (actual time=95.604..95.617 rows=104 loops=1)
+         Group Key: ml.airport_code, (ml.airport_name ->> lang())
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=13 read=837
+         I/O Timings: shared read=8.508
+         ->  Hash Join  (cost=5.34..14265.83 rows=49397 width=40) (actual time=1.131..83.711 rows=49235 loops=1)
+               Hash Cond: (f.arrival_airport = ml.airport_code)
+               Buffers: shared hit=13 read=837
+               I/O Timings: shared read=8.508
+               ->  Seq Scan on flights f  (cost=0.00..1652.80 rows=49397 width=8) (actual time=0.281..18.989 rows=49235 loops=1)
+                     Filter: ((status)::text = 'Arrived'::text)
+                     Rows Removed by Filter: 16429
+                     Buffers: shared read=832
+                     I/O Timings: shared read=8.213
+               ->  Hash  (cost=4.04..4.04 rows=104 width=65) (actual time=0.214..0.215 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                     Buffers: shared read=3
+                     I/O Timings: shared read=0.118
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=65) (actual time=0.081..0.134 rows=104 loops=1)
+                           Buffers: shared read=3
+                           I/O Timings: shared read=0.118
+ Planning:
+   Buffers: shared hit=168 read=33
+   I/O Timings: shared read=2.343
+ Planning Time: 4.987 ms
+ Execution Time: 97.601 ms
+(31 rows)
+

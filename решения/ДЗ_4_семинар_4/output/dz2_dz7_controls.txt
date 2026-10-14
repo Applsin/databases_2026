@@ -1,0 +1,101 @@
+=== Контроль к заданию 2: прилёты за один день, 15.08.2017 ===
+-- условие в ON:
+ строк | аэропортов_с_нулём 
+-------+--------------------
+   104 |                  9
+(1 row)
+
+-- то же условие в WHERE:
+ строк | аэропортов_с_нулём 
+-------+--------------------
+    95 |                  0
+(1 row)
+
+-- COUNT(*) вместо COUNT(f.flight_id) при условии в ON: сколько нулей останется
+ нулей при COUNT(*) | нулей при COUNT(f.flight_id) | COUNT(*) соврал: 1 вместо 0 
+--------------------+------------------------------+-----------------------------
+                  0 |                            9 |                           9
+(1 row)
+
+-- пример таких аэропортов:
+ airport_code | COUNT(*) | COUNT(f.flight_id) 
+--------------+----------+--------------------
+ CEE          |        1 |                  0
+ EYK          |        1 |                  0
+ GDX          |        1 |                  0
+ IWA          |        1 |                  0
+ KXK          |        1 |                  0
+(5 rows)
+
+
+=== Задание 7: NOT IN при нехватке work_mem ===
+                                 QUERY PLAN                                 
+----------------------------------------------------------------------------
+ Gather
+   Workers Planned: 1
+   ->  Parallel Index Only Scan using flights_pkey on flights f
+         Filter: (NOT (SubPlan 1))
+         SubPlan 1
+           ->  Materialize
+                 ->  Seq Scan on ticket_flights tf
+                       Filter: ((fare_conditions)::text = 'Business'::text)
+(8 rows)
+
+-- замер на 50 рейсах, чтобы оценить стоимость одной строки:
+                                QUERY PLAN                                
+--------------------------------------------------------------------------
+ Index Only Scan using flights_pkey on flights f (actual rows=27 loops=1)
+   Index Cond: (flight_id <= 50)
+   Filter: (NOT (SubPlan 1))
+   Rows Removed by Filter: 23
+   Heap Fetches: 0
+   SubPlan 1
+     ->  Materialize (actual rows=140896 loops=50)
+           ->  Seq Scan on ticket_flights tf (actual rows=242204 loops=1)
+                 Filter: ((fare_conditions)::text = 'Business'::text)
+                 Rows Removed by Filter: 2118131
+ Planning Time: 0.374 ms
+ Execution Time: 982.979 ms
+(12 rows)
+
+-- NOT EXISTS при тех же 64kB:
+                                               QUERY PLAN                                               
+--------------------------------------------------------------------------------------------------------
+ Gather (actual rows=41705 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   ->  Parallel Hash Right Anti Join (actual rows=13902 loops=3)
+         Hash Cond: (tf.flight_id = f.flight_id)
+         ->  Parallel Seq Scan on ticket_flights tf (actual rows=80735 loops=3)
+               Filter: ((fare_conditions)::text = 'Business'::text)
+               Rows Removed by Filter: 706044
+         ->  Parallel Hash (actual rows=21888 loops=3)
+               Buckets: 4096  Batches: 32  Memory Usage: 128kB
+               ->  Parallel Index Only Scan using flights_pkey on flights f (actual rows=65664 loops=1)
+                     Heap Fetches: 0
+ Planning Time: 0.870 ms
+ Execution Time: 135.713 ms
+(14 rows)
+
+
+=== Задание 7: ловушка NULL ===
+ NOT IN без NULL 
+-----------------
+           41705
+(1 row)
+
+ NOT IN + один NULL 
+--------------------
+                  0
+(1 row)
+
+ NOT EXISTS + тот же NULL 
+--------------------------
+                    41705
+(1 row)
+
+ column_name | is_nullable 
+-------------+-------------
+ flight_id   | NO
+(1 row)
+

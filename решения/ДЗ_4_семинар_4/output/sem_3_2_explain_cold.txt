@@ -1,0 +1,33 @@
+                                                               QUERY PLAN                                                               
+----------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=35547.37..35547.63 rows=104 width=76) (actual time=194.736..194.743 rows=104 loops=1)
+   Sort Key: (count(f.flight_id)) DESC, ml.airport_code
+   Sort Method: quicksort  Memory: 32kB
+   Buffers: shared hit=22 read=837
+   I/O Timings: shared read=10.253
+   ->  HashAggregate  (cost=35490.33..35543.89 rows=104 width=76) (actual time=194.643..194.659 rows=104 loops=1)
+         Group Key: ml.airport_code, (ml.airport_name ->> lang()), (ml.city ->> lang())
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=16 read=837
+         I/O Timings: shared read=10.253
+         ->  Hash Right Join  (cost=5.34..34833.69 rows=65664 width=72) (actual time=1.064..173.954 rows=65664 loops=1)
+               Hash Cond: (f.departure_airport = ml.airport_code)
+               Buffers: shared hit=16 read=837
+               I/O Timings: shared read=10.253
+               ->  Seq Scan on flights f  (cost=0.00..1488.64 rows=65664 width=8) (actual time=0.129..15.630 rows=65664 loops=1)
+                     Buffers: shared read=832
+                     I/O Timings: shared read=9.971
+               ->  Hash  (cost=4.04..4.04 rows=104 width=114) (actual time=0.234..0.236 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 23kB
+                     Buffers: shared read=3
+                     I/O Timings: shared read=0.105
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=114) (actual time=0.158..0.206 rows=104 loops=1)
+                           Buffers: shared read=3
+                           I/O Timings: shared read=0.105
+ Planning:
+   Buffers: shared hit=169 read=34
+   I/O Timings: shared read=2.143
+ Planning Time: 4.874 ms
+ Execution Time: 197.096 ms
+(29 rows)
+

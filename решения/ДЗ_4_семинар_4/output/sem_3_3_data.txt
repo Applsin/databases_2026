@@ -1,0 +1,9 @@
+ passenger_id |   passenger_name   | flights | total_spent 
+--------------+--------------------+---------+-------------
+ 2034 201228  | ANTONINA KUZNECOVA |       6 |   529500.00
+ 3272 478491  | EKATERINA LAZAREVA |       6 |   506700.00
+ 6615 949899  | ELENA VASILEVA     |       6 |   505500.00
+ 7989 541468  | EVGENIY TARASOV    |       6 |   495300.00
+ 4805 339011  | DMITRIY KUZMIN     |       6 |   494700.00
+(5 rows)
+

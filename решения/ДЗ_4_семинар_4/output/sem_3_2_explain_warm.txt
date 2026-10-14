@@ -1,0 +1,26 @@
+                                                               QUERY PLAN                                                               
+----------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=35547.37..35547.63 rows=104 width=76) (actual time=172.022..172.030 rows=104 loops=1)
+   Sort Key: (count(f.flight_id)) DESC, ml.airport_code
+   Sort Method: quicksort  Memory: 32kB
+   Buffers: shared hit=859
+   ->  HashAggregate  (cost=35490.33..35543.89 rows=104 width=76) (actual time=171.931..171.948 rows=104 loops=1)
+         Group Key: ml.airport_code, (ml.airport_name ->> lang()), (ml.city ->> lang())
+         Batches: 1  Memory Usage: 32kB
+         Buffers: shared hit=853
+         ->  Hash Right Join  (cost=5.34..34833.69 rows=65664 width=72) (actual time=0.246..152.698 rows=65664 loops=1)
+               Hash Cond: (f.departure_airport = ml.airport_code)
+               Buffers: shared hit=853
+               ->  Seq Scan on flights f  (cost=0.00..1488.64 rows=65664 width=8) (actual time=0.003..5.555 rows=65664 loops=1)
+                     Buffers: shared hit=832
+               ->  Hash  (cost=4.04..4.04 rows=104 width=114) (actual time=0.049..0.051 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 23kB
+                     Buffers: shared hit=3
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=114) (actual time=0.006..0.023 rows=104 loops=1)
+                           Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=208
+ Planning Time: 0.711 ms
+ Execution Time: 172.718 ms
+(22 rows)
+

@@ -1,0 +1,19 @@
+                                                                                                                   QUERY PLAN                                                                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2637.77..2637.78 rows=1 width=19) (actual time=45.123..45.280 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=3 read=832
+   I/O Timings: shared read=9.557
+   ->  Seq Scan on flights  (cost=0.00..2637.76 rows=1 width=19) (actual time=0.730..44.099 rows=2251 loops=1)
+         Filter: (((status)::text = 'Arrived'::text) AND (EXTRACT(dow FROM actual_departure) = ANY ('{0,6}'::numeric[])) AND (EXTRACT(year FROM actual_departure) = '2017'::numeric) AND (EXTRACT(month FROM actual_departure) = '8'::numeric))
+         Rows Removed by Filter: 63413
+         Buffers: shared read=832
+         I/O Timings: shared read=9.557
+ Planning:
+   Buffers: shared hit=123 read=24
+   I/O Timings: shared read=1.814
+ Planning Time: 4.272 ms
+ Execution Time: 45.408 ms
+(15 rows)
+

@@ -1,0 +1,26 @@
+                                                                                                     QUERY PLAN                                                                                                      
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2030.18..2030.32 rows=59 width=19) (actual time=13.919..14.161 rows=1913 loops=1)
+   Sort Key: f.actual_departure
+   Sort Method: quicksort  Memory: 138kB
+   Buffers: shared hit=855
+   ->  Hash Join  (cost=30.57..2028.44 rows=59 width=19) (actual time=0.565..13.163 rows=1913 loops=1)
+         Hash Cond: (f.departure_airport = ml.airport_code)
+         Buffers: shared hit=852
+         ->  Seq Scan on flights f  (cost=0.00..1981.12 rows=6130 width=19) (actual time=0.021..11.296 rows=8021 loops=1)
+               Filter: ((actual_departure >= '2017-08-01 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-09-01 00:00:00+03'::timestamp with time zone) AND ((status)::text = 'Arrived'::text))
+               Rows Removed by Filter: 57643
+               Buffers: shared hit=832
+         ->  Hash  (cost=30.56..30.56 rows=1 width=4) (actual time=0.522..0.525 rows=3 loops=1)
+               Buckets: 1024  Batches: 1  Memory Usage: 9kB
+               Buffers: shared hit=20
+               ->  Seq Scan on airports_data ml  (cost=0.00..30.56 rows=1 width=4) (actual time=0.356..0.514 rows=3 loops=1)
+                     Filter: ((city ->> lang()) = 'Moscow'::text)
+                     Rows Removed by Filter: 101
+                     Buffers: shared hit=20
+ Planning:
+   Buffers: shared hit=231
+ Planning Time: 0.962 ms
+ Execution Time: 15.249 ms
+(22 rows)
+
