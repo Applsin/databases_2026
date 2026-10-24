@@ -1,0 +1,40 @@
+                                                                      QUERY PLAN                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=403674.54..403674.55 rows=5 width=68) (actual time=5490.632..5490.640 rows=5 loops=1)
+   Buffers: shared hit=3 read=33640, temp read=32216 written=47725
+   I/O Timings: shared read=233.334, temp read=66.180 write=606.623
+   ->  Sort  (cost=403674.54..405747.22 rows=829071 width=68) (actual time=5465.451..5465.458 rows=5 loops=1)
+         Sort Key: (sum(tf.amount)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         Buffers: shared hit=3 read=33640, temp read=32216 written=47725
+         I/O Timings: shared read=233.334, temp read=66.180 write=606.623
+         ->  HashAggregate  (cost=342660.35..389903.97 rows=829071 width=68) (actual time=3889.906..5273.748 rows=829071 loops=1)
+               Group Key: t.passenger_id, t.passenger_name
+               Planned Partitions: 64  Batches: 65  Memory Usage: 8209kB  Disk Usage: 126880kB
+               Buffers: shared read=33640, temp read=32216 written=47725
+               I/O Timings: shared read=233.334, temp read=66.180 write=606.623
+               ->  Hash Join  (cost=39861.10..124329.36 rows=2360335 width=34) (actual time=396.665..2449.570 rows=2360335 loops=1)
+                     Hash Cond: (tf.ticket_no = t.ticket_no)
+                     Buffers: shared read=33640, temp read=16797 written=16797
+                     I/O Timings: shared read=233.334, temp read=36.322 write=156.489
+                     ->  Seq Scan on ticket_flights tf  (cost=0.00..43323.35 rows=2360335 width=20) (actual time=0.191..434.400 rows=2360335 loops=1)
+                           Buffers: shared read=19720
+                           I/O Timings: shared read=182.946
+                     ->  Hash  (cost=22210.71..22210.71 rows=829071 width=42) (actual time=395.753..395.756 rows=829071 loops=1)
+                           Buckets: 131072  Batches: 16  Memory Usage: 4780kB
+                           Buffers: shared read=13920, temp written=5888
+                           I/O Timings: shared read=50.389, temp write=30.425
+                           ->  Seq Scan on tickets t  (cost=0.00..22210.71 rows=829071 width=42) (actual time=0.200..151.332 rows=829071 loops=1)
+                                 Buffers: shared read=13920
+                                 I/O Timings: shared read=50.389
+ Planning:
+   Buffers: shared hit=220 read=44
+   I/O Timings: shared read=2.715
+ Planning Time: 5.638 ms
+ JIT:
+   Functions: 18
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 1.766 ms, Inlining 0.000 ms, Optimization 2.305 ms, Emission 27.521 ms, Total 31.592 ms
+ Execution Time: 5573.906 ms
+(36 rows)
+

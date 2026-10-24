@@ -1,0 +1,42 @@
+ departure_airport |                  airport_name                  | flights | avg_arrival_delay_min 
+-------------------+------------------------------------------------+---------+-----------------------
+ CEK               | Chelyabinsk Balandino Airport                  |     812 |                  15.9
+ SCW               | Syktyvkar Airport                              |     501 |                  15.3
+ CSY               | Cheboksary Airport                             |     605 |                  14.7
+ IKT               | Irkutsk Airport                                |     727 |                  14.4
+ HMA               | Khanty Mansiysk Airport                        |    1021 |                  14.1
+ SVX               | Koltsovo Airport                               |    1367 |                  13.9
+ PES               | Petrozavodsk Airport                           |     709 |                  13.7
+ BZK               | Bryansk Airport                                |    1210 |                  13.7
+ TJM               | Roshchino International Airport                |     847 |                  13.6
+ OVS               | Sovetskiy Airport                              |    1089 |                  13.4
+ EGO               | Belgorod International Airport                 |     726 |                  13.2
+ GOJ               | Nizhny Novgorod Strigino International Airport |     709 |                  13.1
+ MJZ               | Mirny Airport                                  |     761 |                  13.0
+ VKT               | Vorkuta Airport                                |     554 |                  12.9
+ SVO               | Sheremetyevo International Airport             |    5912 |                  12.6
+ NOZ               | Spichenkovo Airport                            |     725 |                  12.6
+ KVX               | Pobedilovo Airport                             |     726 |                  12.5
+ VKO               | Vnukovo International Airport                  |    3405 |                  12.5
+ DME               | Domodedovo International Airport               |    6376 |                  12.3
+ NUX               | Novy Urengoy Airport                           |    1003 |                  12.3
+ JOK               | Yoshkar-Ola Airport                            |     519 |                  12.3
+ ROV               | Rostov-on-Don Airport                          |    1227 |                  12.2
+ KZN               | Kazan International Airport                    |     934 |                  12.1
+ REN               | Orenburg Central Airport                       |     605 |                  12.0
+ KJA               | Yemelyanovo Airport                            |    1401 |                  12.0
+ AER               | Sochi International Airport                    |    1159 |                  11.9
+ LED               | Pulkovo Airport                                |    3769 |                  11.7
+ SGC               | Surgut Airport                                 |    1055 |                  11.7
+ TOF               | Bogashevo Airport                              |     501 |                  11.6
+ VOG               | Volgograd International Airport                |     622 |                  11.4
+ PEE               | Bolshoye Savino Airport                        |    1228 |                  11.3
+ OVB               | Tolmachevo Airport                             |    2091 |                  11.1
+ UFA               | Ufa International Airport                      |     761 |                  11.0
+ UUS               | Yuzhno-Sakhalinsk Airport                      |     519 |                  10.6
+ ESL               | Elista Airport                                 |     588 |                  10.6
+ ULV               | Ulyanovsk Baratayevka Airport                  |     778 |                  10.4
+ ARH               | Talagi Airport                                 |     640 |                  10.2
+ KHV               | Khabarovsk-Novy Airport                        |     795 |                   9.5
+(38 rows)
+

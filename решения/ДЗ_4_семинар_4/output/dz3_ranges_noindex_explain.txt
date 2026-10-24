@@ -1,0 +1,19 @@
+                                                                                                                                                                                                                                                                                                                                           QUERY PLAN                                                                                                                                                                                                                                                                                                                                            
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=3060.16..3064.53 rows=1747 width=19) (actual time=14.981..15.159 rows=2251 loops=1)
+   Sort Key: actual_departure
+   Sort Method: quicksort  Memory: 202kB
+   Buffers: shared hit=3 read=832
+   I/O Timings: shared read=6.495
+   ->  Seq Scan on flights  (cost=0.00..2966.08 rows=1747 width=19) (actual time=0.268..14.279 rows=2251 loops=1)
+         Filter: (((status)::text = 'Arrived'::text) AND (((actual_departure >= '2017-08-05 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-07 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-12 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-14 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-19 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-21 00:00:00+03'::timestamp with time zone)) OR ((actual_departure >= '2017-08-26 00:00:00+03'::timestamp with time zone) AND (actual_departure < '2017-08-28 00:00:00+03'::timestamp with time zone))))
+         Rows Removed by Filter: 63413
+         Buffers: shared read=832
+         I/O Timings: shared read=6.495
+ Planning:
+   Buffers: shared hit=97 read=23
+   I/O Timings: shared read=1.401
+ Planning Time: 2.909 ms
+ Execution Time: 15.527 ms
+(15 rows)
+

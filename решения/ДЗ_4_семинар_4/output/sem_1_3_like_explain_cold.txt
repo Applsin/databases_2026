@@ -1,0 +1,24 @@
+                                                       QUERY PLAN                                                       
+------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1764.78..1766.56 rows=710 width=15) (actual time=21.814..21.822 rows=100 loops=1)
+   Sort Key: flight_no
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=3 read=832
+   I/O Timings: shared read=9.194
+   ->  HashAggregate  (cost=1724.06..1731.16 rows=710 width=15) (actual time=21.689..21.718 rows=100 loops=1)
+         Group Key: flight_no
+         Batches: 1  Memory Usage: 49kB
+         Buffers: shared read=832
+         I/O Timings: shared read=9.194
+         ->  Seq Scan on flights  (cost=0.00..1652.80 rows=9501 width=15) (actual time=0.406..18.368 rows=9715 loops=1)
+               Filter: (flight_no ~~ 'PG04%'::text)
+               Rows Removed by Filter: 55949
+               Buffers: shared read=832
+               I/O Timings: shared read=9.194
+ Planning:
+   Buffers: shared hit=84 read=27
+   I/O Timings: shared read=1.807
+ Planning Time: 4.245 ms
+ Execution Time: 22.259 ms
+(20 rows)
+

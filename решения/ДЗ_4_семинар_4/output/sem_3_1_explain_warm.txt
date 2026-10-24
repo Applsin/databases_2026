@@ -1,0 +1,64 @@
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=193510.50..193515.67 rows=10 width=107) (actual time=5137.883..5137.922 rows=10 loops=1)
+   Buffers: shared hit=929 read=33575, temp read=16196 written=16196
+   I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+   ->  Result  (cost=193510.50..1414983.86 rows=2360335 width=107) (actual time=5121.150..5121.187 rows=10 loops=1)
+         Buffers: shared hit=929 read=33575, temp read=16196 written=16196
+         I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+         ->  Sort  (cost=193510.50..199411.33 rows=2360335 width=141) (actual time=5120.642..5120.653 rows=10 loops=1)
+               Sort Key: tf.amount DESC, tf.ticket_no
+               Sort Method: top-N heapsort  Memory: 29kB
+               Buffers: shared hit=909 read=33575, temp read=16196 written=16196
+               I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+               ->  Hash Join  (cost=40562.22..142504.50 rows=2360335 width=141) (actual time=337.416..4197.090 rows=2360335 loops=1)
+                     Hash Cond: (f.arrival_airport = ml_1.airport_code)
+                     Buffers: shared hit=903 read=33575, temp read=16196 written=16196
+                     I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+                     ->  Hash Join  (cost=40556.88..136050.79 rows=2360335 width=96) (actual time=337.301..3749.674 rows=2360335 loops=1)
+                           Hash Cond: (f.departure_airport = ml.airport_code)
+                           Buffers: shared hit=900 read=33575, temp read=16196 written=16196
+                           I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+                           ->  Hash Join  (cost=40551.54..129597.08 rows=2360335 width=51) (actual time=337.251..3287.810 rows=2360335 loops=1)
+                                 Hash Cond: (tf.flight_id = f.flight_id)
+                                 Buffers: shared hit=897 read=33575, temp read=16196 written=16196
+                                 I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+                                 ->  Hash Join  (cost=38242.10..121091.36 rows=2360335 width=40) (actual time=314.428..2411.328 rows=2360335 loops=1)
+                                       Hash Cond: (tf.ticket_no = t.ticket_no)
+                                       Buffers: shared hit=65 read=33575, temp read=16196 written=16196
+                                       I/O Timings: shared read=62.616, temp read=40.278 write=78.701
+                                       ->  Seq Scan on ticket_flights tf  (cost=0.00..43323.35 rows=2360335 width=24) (actual time=0.096..304.600 rows=2360335 loops=1)
+                                             Buffers: shared hit=33 read=19687
+                                             I/O Timings: shared read=38.755
+                                       ->  Hash  (cost=22210.71..22210.71 rows=829071 width=30) (actual time=313.539..313.541 rows=829071 loops=1)
+                                             Buckets: 131072  Batches: 8  Memory Usage: 7319kB
+                                             Buffers: shared hit=32 read=13888, temp written=4434
+                                             I/O Timings: shared read=23.861, temp write=20.629
+                                             ->  Seq Scan on tickets t  (cost=0.00..22210.71 rows=829071 width=30) (actual time=0.039..119.149 rows=829071 loops=1)
+                                                   Buffers: shared hit=32 read=13888
+                                                   I/O Timings: shared read=23.861
+                                 ->  Hash  (cost=1488.64..1488.64 rows=65664 width=19) (actual time=22.215..22.216 rows=65664 loops=1)
+                                       Buckets: 131072  Batches: 1  Memory Usage: 4359kB
+                                       Buffers: shared hit=832
+                                       ->  Seq Scan on flights f  (cost=0.00..1488.64 rows=65664 width=19) (actual time=0.017..7.986 rows=65664 loops=1)
+                                             Buffers: shared hit=832
+                           ->  Hash  (cost=4.04..4.04 rows=104 width=53) (actual time=0.033..0.034 rows=104 loops=1)
+                                 Buckets: 1024  Batches: 1  Memory Usage: 17kB
+                                 Buffers: shared hit=3
+                                 ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=53) (actual time=0.006..0.017 rows=104 loops=1)
+                                       Buffers: shared hit=3
+                     ->  Hash  (cost=4.04..4.04 rows=104 width=53) (actual time=0.094..0.095 rows=104 loops=1)
+                           Buckets: 1024  Batches: 1  Memory Usage: 17kB
+                           Buffers: shared hit=3
+                           ->  Seq Scan on airports_data ml_1  (cost=0.00..4.04 rows=104 width=53) (actual time=0.018..0.069 rows=104 loops=1)
+                                 Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=358
+ Planning Time: 1.475 ms
+ JIT:
+   Functions: 37
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 1.342 ms, Inlining 0.000 ms, Optimization 0.721 ms, Emission 16.168 ms, Total 18.231 ms
+ Execution Time: 5157.809 ms
+(60 rows)
+

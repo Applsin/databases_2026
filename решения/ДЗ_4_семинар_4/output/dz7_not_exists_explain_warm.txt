@@ -1,0 +1,22 @@
+                                                           QUERY PLAN                                                            
+---------------------------------------------------------------------------------------------------------------------------------
+ Hash Right Anti Join  (cost=2309.44..53344.81 rows=37858 width=19) (actual time=280.860..289.568 rows=41705 loops=1)
+   Hash Cond: (tf.flight_id = f.flight_id)
+   Buffers: shared hit=865 read=19687
+   I/O Timings: shared read=30.790
+   ->  Seq Scan on ticket_flights tf  (cost=0.00..49224.19 rows=246891 width=4) (actual time=0.057..196.164 rows=242204 loops=1)
+         Filter: ((fare_conditions)::text = 'Business'::text)
+         Rows Removed by Filter: 2118131
+         Buffers: shared hit=33 read=19687
+         I/O Timings: shared read=30.790
+   ->  Hash  (cost=1488.64..1488.64 rows=65664 width=19) (actual time=35.908..35.912 rows=65664 loops=1)
+         Buckets: 131072  Batches: 1  Memory Usage: 4326kB
+         Buffers: shared hit=832
+         ->  Seq Scan on flights f  (cost=0.00..1488.64 rows=65664 width=19) (actual time=0.011..12.195 rows=65664 loops=1)
+               Buffers: shared hit=832
+ Planning:
+   Buffers: shared hit=237
+ Planning Time: 0.696 ms
+ Execution Time: 291.073 ms
+(18 rows)
+

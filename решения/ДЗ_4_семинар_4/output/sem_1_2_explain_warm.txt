@@ -1,0 +1,16 @@
+                                                    QUERY PLAN                                                     
+-------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=3613.73..3668.45 rows=21888 width=55) (actual time=16.717..16.859 rows=2394 loops=1)
+   Sort Key: (round((EXTRACT(epoch FROM (actual_arrival - scheduled_arrival)) / '60'::numeric), 0)) DESC
+   Sort Method: quicksort  Memory: 227kB
+   Buffers: shared hit=835
+   ->  Seq Scan on flights  (cost=0.00..2035.84 rows=21888 width=55) (actual time=0.035..15.149 rows=2394 loops=1)
+         Filter: ((actual_arrival - scheduled_arrival) > '02:00:00'::interval)
+         Rows Removed by Filter: 63270
+         Buffers: shared hit=832
+ Planning:
+   Buffers: shared hit=113
+ Planning Time: 0.591 ms
+ Execution Time: 17.053 ms
+(12 rows)
+

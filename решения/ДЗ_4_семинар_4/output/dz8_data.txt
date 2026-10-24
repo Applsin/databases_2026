@@ -1,0 +1,10 @@
+  status   | count 
+-----------+-------
+ Departed  |    58
+ Arrived   | 49235
+ On Time   |   518
+ Cancelled |   429
+ Delayed   |    41
+ Scheduled | 15383
+(6 rows)
+

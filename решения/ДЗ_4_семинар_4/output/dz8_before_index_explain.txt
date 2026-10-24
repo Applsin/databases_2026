@@ -1,0 +1,17 @@
+                                                    QUERY PLAN                                                     
+-------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=1816.96..1817.02 rows=6 width=16) (actual time=35.637..35.641 rows=6 loops=1)
+   Group Key: status
+   Batches: 1  Memory Usage: 24kB
+   Buffers: shared read=832
+   I/O Timings: shared read=8.931
+   ->  Seq Scan on flights  (cost=0.00..1488.64 rows=65664 width=8) (actual time=0.233..15.876 rows=65664 loops=1)
+         Buffers: shared read=832
+         I/O Timings: shared read=8.931
+ Planning:
+   Buffers: shared hit=83 read=22 dirtied=1
+   I/O Timings: shared read=1.497
+ Planning Time: 3.307 ms
+ Execution Time: 36.480 ms
+(13 rows)
+

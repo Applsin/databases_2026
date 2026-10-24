@@ -1,0 +1,20 @@
+                                                            QUERY PLAN                                                             
+-----------------------------------------------------------------------------------------------------------------------------------
+ Seq Scan on flights f  (cost=49841.42..51494.22 rows=32832 width=19) (actual time=362.946..407.982 rows=41705 loops=1)
+   Filter: (NOT (hashed SubPlan 1))
+   Rows Removed by Filter: 23959
+   Buffers: shared read=20552
+   I/O Timings: shared read=90.592
+   SubPlan 1
+     ->  Seq Scan on ticket_flights tf  (cost=0.00..49224.19 rows=246891 width=4) (actual time=0.158..294.573 rows=242204 loops=1)
+           Filter: ((fare_conditions)::text = 'Business'::text)
+           Rows Removed by Filter: 2118131
+           Buffers: shared read=19720
+           I/O Timings: shared read=80.067
+ Planning:
+   Buffers: shared hit=88 read=23
+   I/O Timings: shared read=1.201
+ Planning Time: 2.483 ms
+ Execution Time: 412.121 ms
+(16 rows)
+

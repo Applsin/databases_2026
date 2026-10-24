@@ -1,0 +1,17 @@
+                                                                    QUERY PLAN                                                                    
+--------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=0.29..1482.49 rows=6 width=16) (actual time=7.863..10.108 rows=6 loops=1)
+   Group Key: status
+   Buffers: shared read=58
+   I/O Timings: shared read=1.045
+   ->  Index Only Scan using idx_flights_status on flights  (cost=0.29..1169.89 rows=62507 width=8) (actual time=0.239..5.133 rows=65664 loops=1)
+         Heap Fetches: 0
+         Buffers: shared read=58
+         I/O Timings: shared read=1.045
+ Planning:
+   Buffers: shared hit=99 read=23
+   I/O Timings: shared read=1.259
+ Planning Time: 2.752 ms
+ Execution Time: 11.698 ms
+(13 rows)
+

@@ -1,0 +1,14 @@
+  passenger_name   |  amount   | flight_no | departure_city | arrival_city  
+-------------------+-----------+-----------+----------------+---------------
+ PAVEL SCHERBAKOV  | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ ELENA STEPANOVA   | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ NADEZHDA BORISOVA | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ LILIYA KUZMINA    | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ YULIYA FADEEVA    | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ NIKOLAY MAKSIMOV  | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ NIKOLAY MAKSIMOV  | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ EDUARD SOKOLOV    | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ ALEKSANDR SERGEEV | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+ IGOR SERGEEV      | 203300.00 | PG0144    | Moscow         | Petropavlovsk
+(10 rows)
+

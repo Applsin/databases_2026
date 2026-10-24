@@ -1,0 +1,108 @@
+ airport_code |                  airport_name                  | arrived_flights 
+--------------+------------------------------------------------+-----------------
+ DME          | Domodedovo International Airport               |            4775
+ SVO          | Sheremetyevo International Airport             |            4431
+ LED          | Pulkovo Airport                                |            2825
+ VKO          | Vnukovo International Airport                  |            2553
+ OVB          | Tolmachevo Airport                             |            1572
+ KJA          | Yemelyanovo Airport                            |            1053
+ SVX          | Koltsovo Airport                               |            1025
+ PEE          | Bolshoye Savino Airport                        |             920
+ ROV          | Rostov-on-Don Airport                          |             918
+ BZK          | Bryansk Airport                                |             908
+ AER          | Sochi International Airport                    |             870
+ OVS          | Sovetskiy Airport                              |             816
+ SGC          | Surgut Airport                                 |             790
+ HMA          | Khanty Mansiysk Airport                        |             765
+ NUX          | Novy Urengoy Airport                           |             753
+ KZN          | Kazan International Airport                    |             699
+ TJM          | Roshchino International Airport                |             636
+ CEK          | Chelyabinsk Balandino Airport                  |             609
+ KHV          | Khabarovsk-Novy Airport                        |             594
+ ULV          | Ulyanovsk Baratayevka Airport                  |             583
+ MJZ          | Mirny Airport                                  |             572
+ UFA          | Ufa International Airport                      |             572
+ IKT          | Irkutsk Airport                                |             546
+ NOZ          | Spichenkovo Airport                            |             546
+ EGO          | Belgorod International Airport                 |             544
+ KVX          | Pobedilovo Airport                             |             544
+ GOJ          | Nizhny Novgorod Strigino International Airport |             532
+ PES          | Petrozavodsk Airport                           |             532
+ ARH          | Talagi Airport                                 |             480
+ VOG          | Volgograd International Airport                |             465
+ CSY          | Cheboksary Airport                             |             454
+ REN          | Orenburg Central Airport                       |             454
+ ESL          | Elista Airport                                 |             441
+ VKT          | Vorkuta Airport                                |             413
+ JOK          | Yoshkar-Ola Airport                            |             389
+ UUS          | Yuzhno-Sakhalinsk Airport                      |             388
+ TOF          | Bogashevo Airport                              |             376
+ SCW          | Syktyvkar Airport                              |             375
+ MQF          | Magnitogorsk International Airport             |             364
+ RTW          | Saratov Central Airport                        |             364
+ PEZ          | Penza Airport                                  |             362
+ TBW          | Donskoye Airport                               |             362
+ ABA          | Abakan Airport                                 |             351
+ KRR          | Krasnodar Pashkovsky International Airport     |             350
+ NBC          | Begishevo Airport                              |             338
+ KRO          | Kurgan Airport                                 |             311
+ MRV          | Mineralnyye Vody Airport                       |             311
+ OMS          | Omsk Central Airport                           |             299
+ MCX          | Uytash Airport                                 |             298
+ KGP          | Kogalym International Airport                  |             286
+ ULY          | Ulyanovsk East Airport                         |             286
+ NJC          | Nizhnevartovsk Airport                         |             284
+ KUF          | Kurumoch International Airport                 |             273
+ NAL          | Nalchik Airport                                |             273
+ UCT          | Ukhta Airport                                  |             273
+ NOJ          | Noyabrsk Airport                               |             272
+ UUA          | Bugulma Airport                                |             272
+ VVO          | Vladivostok International Airport              |             272
+ UIK          | Ust-Ilimsk Airport                             |             259
+ YKS          | Yakutsk Airport                                |             246
+ BAX          | Barnaul Airport                                |             234
+ CNN          | Chulman Airport                                |             234
+ KGD          | Khrabrovo Airport                              |             234
+ NNM          | Naryan Mar Airport                             |             234
+ ASF          | Astrakhan Airport                              |             220
+ NSK          | Norilsk-Alykel Airport                         |             208
+ URS          | Kursk East Airport                             |             208
+ NYM          | Nadym Airport                                  |             207
+ AAQ          | Anapa Vityazevo Airport                        |             194
+ CEE          | Cherepovets Airport                            |             193
+ OGZ          | Beslan Airport                                 |             182
+ SKX          | Saransk Airport                                |             182
+ SLY          | Salekhard Airport                              |             182
+ URJ          | Uray Airport                                   |             182
+ KLF          | Grabtsevo Airport                              |             181
+ MMK          | Murmansk Airport                               |             181
+ STW          | Stavropol Shpakovskoye Airport                 |             181
+ VOZ          | Voronezh International Airport                 |             181
+ GDZ          | Gelendzhik Airport                             |             168
+ HTA          | Chita-Kadala Airport                           |             143
+ PKV          | Pskov Airport                                  |             142
+ KEJ          | Kemerovo Airport                               |             130
+ RGK          | Gorno-Altaysk Airport                          |             129
+ IAR          | Tunoshna Airport                               |             117
+ GRV          | Khankala Air Base                              |             104
+ OSW          | Orsk Airport                                   |             104
+ UUD          | Ulan-Ude Airport (Mukhino)                     |             104
+ BQS          | Ignatyevo Airport                              |              91
+ BTK          | Bratsk Airport                                 |              91
+ IJK          | Izhevsk Airport                                |              91
+ SWT          | Strezhevoy Airport                             |              91
+ UKX          | Ust-Kut Airport                                |              91
+ EYK          | Beloyarskiy Airport                            |              78
+ KYZ          | Kyzyl Airport                                  |              65
+ LPK          | Lipetsk Airport                                |              65
+ NFG          | Nefteyugansk Airport                           |              65
+ GDX          | Sokol Airport                                  |              52
+ IWA          | Ivanovo South Airport                          |              52
+ DYR          | Ugolny Airport                                 |              51
+ NYA          | Nyagan Airport                                 |              39
+ PKC          | Yelizovo Airport                               |              39
+ PYJ          | Polyarny Airport                               |              39
+ KXK          | Komsomolsk-on-Amur Airport                     |              26
+ USK          | Usinsk Airport                                 |              26
+(104 rows)
+

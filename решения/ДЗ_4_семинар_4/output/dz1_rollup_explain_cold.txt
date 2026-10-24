@@ -1,0 +1,30 @@
+                                                                              QUERY PLAN                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=93647.64..93751.55 rows=41563 width=44) (actual time=498.124..498.126 rows=4 loops=1)
+   Sort Key: (((date_trunc('month'::text, book_date)))::date)
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=6 read=3780, temp read=2397 written=2407
+   I/O Timings: shared read=37.108, temp read=4.933 write=10.067
+   ->  GroupAggregate  (cost=83228.45..90459.13 rows=41563 width=44) (actual time=381.045..498.087 rows=4 loops=1)
+         Group Key: (date_trunc('month'::text, book_date))
+         Group Key: ()
+         Filter: ((sum(total_amount) > '10000000000'::numeric) OR (GROUPING((date_trunc('month'::text, book_date))) = 1))
+         Rows Removed by Filter: 2
+         Buffers: shared hit=3 read=3780, temp read=2397 written=2407
+         I/O Timings: shared read=37.108, temp read=4.933 write=10.067
+         ->  Sort  (cost=83228.45..84711.74 rows=593314 width=22) (actual time=339.913..399.559 rows=593433 loops=1)
+               Sort Key: (date_trunc('month'::text, book_date))
+               Sort Method: external merge  Disk: 19176kB
+               Buffers: shared hit=3 read=3780, temp read=2397 written=2407
+               I/O Timings: shared read=37.108, temp read=4.933 write=10.067
+               ->  Seq Scan on bookings  (cost=0.00..14164.78 rows=593314 width=22) (actual time=0.527..222.448 rows=593433 loops=1)
+                     Filter: ((book_date >= '2017-01-01 00:00:00+03'::timestamp with time zone) AND (book_date < '2018-01-01 00:00:00+03'::timestamp with time zone))
+                     Buffers: shared read=3780
+                     I/O Timings: shared read=37.108
+ Planning:
+   Buffers: shared hit=78 read=20
+   I/O Timings: shared read=1.331
+ Planning Time: 3.194 ms
+ Execution Time: 501.252 ms
+(26 rows)
+

@@ -1,0 +1,28 @@
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=20697.14..20706.15 rows=3605 width=76) (actual time=211.896..211.905 rows=38 loops=1)
+   Sort Key: (round(avg((EXTRACT(epoch FROM (f.actual_arrival - f.scheduled_arrival)) / '60'::numeric)), 1)) DESC
+   Sort Method: quicksort  Memory: 27kB
+   Buffers: shared hit=857
+   ->  HashAggregate  (cost=19402.65..20484.16 rows=3605 width=76) (actual time=211.674..211.843 rows=38 loops=1)
+         Group Key: f.departure_airport, (ml.airport_name ->> lang())
+         Filter: (count(*) > 500)
+         Batches: 1  Memory Usage: 465kB
+         Rows Removed by Filter: 66
+         Buffers: shared hit=854
+         ->  Hash Join  (cost=5.34..18253.53 rows=65664 width=52) (actual time=0.369..162.589 rows=65664 loops=1)
+               Hash Cond: (f.departure_airport = ml.airport_code)
+               Buffers: shared hit=854
+               ->  Seq Scan on flights f  (cost=0.00..1488.64 rows=65664 width=20) (actual time=0.007..9.575 rows=65664 loops=1)
+                     Buffers: shared hit=832
+               ->  Hash  (cost=4.04..4.04 rows=104 width=65) (actual time=0.063..0.065 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                     Buffers: shared hit=3
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=65) (actual time=0.005..0.027 rows=104 loops=1)
+                           Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=215
+ Planning Time: 1.080 ms
+ Execution Time: 213.162 ms
+(24 rows)
+

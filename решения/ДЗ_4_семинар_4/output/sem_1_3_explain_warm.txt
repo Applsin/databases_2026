@@ -1,0 +1,23 @@
+                                                                              QUERY PLAN                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1329.68..1331.45 rows=710 width=15) (actual time=6.448..6.456 rows=100 loops=1)
+   Sort Key: flight_no
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=222
+   ->  HashAggregate  (cost=1288.96..1296.06 rows=710 width=15) (actual time=6.328..6.353 rows=100 loops=1)
+         Group Key: flight_no
+         Batches: 1  Memory Usage: 49kB
+         Buffers: shared hit=219
+         ->  Bitmap Heap Scan on flights  (cost=244.98..1218.30 rows=9421 width=15) (actual time=1.678..3.230 rows=9715 loops=1)
+               Recheck Cond: ((flight_no >= 'PG0400'::bpchar) AND (flight_no < 'PG0500'::bpchar))
+               Heap Blocks: exact=179
+               Buffers: shared hit=219
+               ->  Bitmap Index Scan on flights_flight_no_scheduled_departure_key  (cost=0.00..242.63 rows=9421 width=0) (actual time=1.637..1.638 rows=9715 loops=1)
+                     Index Cond: ((flight_no >= 'PG0400'::bpchar) AND (flight_no < 'PG0500'::bpchar))
+                     Buffers: shared hit=40
+ Planning:
+   Buffers: shared hit=113
+ Planning Time: 0.548 ms
+ Execution Time: 6.619 ms
+(19 rows)
+

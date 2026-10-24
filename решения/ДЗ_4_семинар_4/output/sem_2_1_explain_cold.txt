@@ -1,0 +1,35 @@
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=20697.14..20706.15 rows=3605 width=76) (actual time=166.789..166.796 rows=38 loops=1)
+   Sort Key: (round(avg((EXTRACT(epoch FROM (f.actual_arrival - f.scheduled_arrival)) / '60'::numeric)), 1)) DESC
+   Sort Method: quicksort  Memory: 27kB
+   Buffers: shared hit=17 read=840
+   I/O Timings: shared read=10.182
+   ->  HashAggregate  (cost=19402.65..20484.16 rows=3605 width=76) (actual time=166.488..166.609 rows=38 loops=1)
+         Group Key: f.departure_airport, (ml.airport_name ->> lang())
+         Filter: (count(*) > 500)
+         Batches: 1  Memory Usage: 465kB
+         Rows Removed by Filter: 66
+         Buffers: shared hit=14 read=840
+         I/O Timings: shared read=10.182
+         ->  Hash Join  (cost=5.34..18253.53 rows=65664 width=52) (actual time=1.327..126.987 rows=65664 loops=1)
+               Hash Cond: (f.departure_airport = ml.airport_code)
+               Buffers: shared hit=14 read=840
+               I/O Timings: shared read=10.182
+               ->  Seq Scan on flights f  (cost=0.00..1488.64 rows=65664 width=20) (actual time=0.255..16.267 rows=65664 loops=1)
+                     Buffers: shared read=832
+                     I/O Timings: shared read=9.639
+               ->  Hash  (cost=4.04..4.04 rows=104 width=65) (actual time=0.180..0.182 rows=104 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                     Buffers: shared read=3
+                     I/O Timings: shared read=0.123
+                     ->  Seq Scan on airports_data ml  (cost=0.00..4.04 rows=104 width=65) (actual time=0.091..0.141 rows=104 loops=1)
+                           Buffers: shared read=3
+                           I/O Timings: shared read=0.123
+ Planning:
+   Buffers: shared hit=177 read=33 dirtied=1
+   I/O Timings: shared read=1.781
+ Planning Time: 4.182 ms
+ Execution Time: 169.271 ms
+(31 rows)
+

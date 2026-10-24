@@ -1,0 +1,53 @@
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=94330.35..94452.31 rows=10 width=107) (actual time=1184.132..1184.528 rows=10 loops=1)
+   Buffers: shared hit=118 read=19738
+   I/O Timings: shared read=101.507
+   ->  Nested Loop  (cost=94330.21..94445.65 rows=10 width=96) (actual time=1182.724..1183.071 rows=10 loops=1)
+         Buffers: shared hit=87 read=19729
+         I/O Timings: shared read=100.795
+         ->  Nested Loop  (cost=94330.07..94444.05 rows=10 width=51) (actual time=1182.623..1182.950 rows=10 loops=1)
+               Buffers: shared hit=68 read=19728
+               I/O Timings: shared read=100.709
+               ->  Nested Loop  (cost=94329.78..94360.95 rows=10 width=40) (actual time=1182.351..1182.526 rows=10 loops=1)
+                     Buffers: shared hit=41 read=19725
+                     I/O Timings: shared read=100.365
+                     ->  Limit  (cost=94329.34..94329.37 rows=10 width=24) (actual time=1181.796..1181.802 rows=10 loops=1)
+                           Buffers: shared hit=6 read=19720
+                           I/O Timings: shared read=99.749
+                           ->  Sort  (cost=94329.34..100230.18 rows=2360335 width=24) (actual time=1181.792..1181.796 rows=10 loops=1)
+                                 Sort Key: ticket_flights.amount DESC, ticket_flights.ticket_no
+                                 Sort Method: top-N heapsort  Memory: 26kB
+                                 Buffers: shared hit=6 read=19720
+                                 I/O Timings: shared read=99.749
+                                 ->  Seq Scan on ticket_flights  (cost=0.00..43323.35 rows=2360335 width=24) (actual time=0.259..482.843 rows=2360335 loops=1)
+                                       Buffers: shared read=19720
+                                       I/O Timings: shared read=99.749
+                     ->  Memoize  (cost=0.43..8.45 rows=1 width=30) (actual time=0.071..0.071 rows=1 loops=10)
+                           Cache Key: ticket_flights.ticket_no
+                           Cache Mode: logical
+                           Hits: 0  Misses: 10  Evictions: 0  Overflows: 0  Memory Usage: 2kB
+                           Buffers: shared hit=35 read=5
+                           I/O Timings: shared read=0.616
+                           ->  Index Scan using tickets_pkey on tickets t  (cost=0.42..8.44 rows=1 width=30) (actual time=0.068..0.068 rows=1 loops=10)
+                                 Index Cond: (ticket_no = ticket_flights.ticket_no)
+                                 Buffers: shared hit=35 read=5
+                                 I/O Timings: shared read=0.616
+               ->  Index Scan using flights_pkey on flights f  (cost=0.29..8.31 rows=1 width=19) (actual time=0.038..0.038 rows=1 loops=10)
+                     Index Cond: (flight_id = ticket_flights.flight_id)
+                     Buffers: shared hit=27 read=3
+                     I/O Timings: shared read=0.344
+         ->  Index Scan using airports_data_pkey on airports_data ml  (cost=0.14..0.16 rows=1 width=53) (actual time=0.011..0.011 rows=1 loops=10)
+               Index Cond: (airport_code = f.departure_airport)
+               Buffers: shared hit=19 read=1
+               I/O Timings: shared read=0.086
+   ->  Index Scan using airports_data_pkey on airports_data ml_1  (cost=0.14..0.16 rows=1 width=53) (actual time=0.002..0.002 rows=1 loops=10)
+         Index Cond: (airport_code = f.arrival_airport)
+         Buffers: shared hit=20
+ Planning:
+   Buffers: shared hit=294 read=49
+   I/O Timings: shared read=3.925
+ Planning Time: 7.990 ms
+ Execution Time: 1187.098 ms
+(49 rows)
+
