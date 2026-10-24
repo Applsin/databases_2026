@@ -70,3 +70,59 @@ JOIN ticket_flights tf ON tf.ticket_no = t.ticket_no
 GROUP BY t.passenger_id, t.passenger_name
 ORDER BY total_spent DESC
 LIMIT 5;
+
+--ДЗ
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT SUM(amount) AS total_amount
+FROM ticket_flights, 
+WHERE scheduled_departure >= '2017-01-01' AND < '2018-01-01'
+GROUP BY ROLLUP (1)
+HAVING (amount) OR GROUPING (1)
+
+-- Посчитать прибывшие рейсы (status = 'Arrived') для каждого аэропорта, включая те, куда рейсов нет (0)
+SELECT airport_code, airport_name, COUNT(flight_id) AS flights_cnt
+FROM airports_data AS a
+LEFT JOIN flights as f ON departure_airport AND 
+GROUP BY airport_code, airport_name
+ORDER BY flights_cnt
+
+--Найти выполненные рейсы (status = 'Arrived') в выходные (суббота, воскресенье) августа 2017.
+SELECT flight_no, scheduled_departure, status
+FROM flights
+WHERE status = 'Arrived'
+  AND (
+      (scheduled_departure >= '2017-08-05' AND scheduled_departure < '2017-08-07') OR
+      (scheduled_departure >= '2017-08-12' AND scheduled_departure < '2017-08-14') OR
+      (scheduled_departure >= '2017-08-19' AND scheduled_departure < '2017-08-21') OR
+      (scheduled_departure >= '2017-08-26' AND scheduled_departure < '2017-08-28')
+  );
+
+--Найти все рейсы, на которые не был продан ни один билет бизнес-класса (fare_conditions = 'Business').
+SELECT flight_no, scheduled_departure
+FROM flights
+WHERE flight_id NOT IN (
+    SELECT flight_id 
+    FROM ticket_flights 
+    WHERE fare_conditions = 'Business'
+);
+
+
+
+WITH FlightStats AS MATERIALIZED (
+    SELECT flight_id, 
+           COUNT(ticket_no) AS tickets_sold, 
+           SUM(amount) AS total_revenue
+    FROM ticket_flights
+    GROUP BY flight_id
+)
+SELECT f.flight_no, 
+       f.scheduled_departure, 
+       fs.tickets_sold, 
+       fs.total_revenue
+FROM flights f
+JOIN FlightStats fs ON f.flight_id = fs.flight_id
+WHERE f.status = 'Arrived'
+  AND f.scheduled_departure >= '2017-08-01' 
+  AND f.scheduled_departure < '2017-09-01';
+
+
