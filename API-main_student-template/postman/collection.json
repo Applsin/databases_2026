@@ -1,0 +1,28 @@
+{
+  "info": {
+    "name": "Учебный API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://127.0.0.1:4010"},
+    {"key": "apiKey", "value": "replace-me"}
+  ],
+  "item": [
+    {
+      "name": "health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "command-invalid",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\"idempotency_key\": \"\"}"},
+        "url": "{{baseUrl}}/api/v1/commands"
+      }
+    }
+  ]
+}

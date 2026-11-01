@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: Учебный API-сервис
+  version: 0.1.0
+  description: >
+    Заготовка. Предметные маршруты студент описывает по своему паспорту темы.
+    Этот файл показывает только проверку тела и единую ошибку.
+paths:
+  /health:
+    get:
+      summary: Проверка живости
+      responses:
+        "200":
+          description: Сервис отвечает
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service, version]
+                properties:
+                  status: { type: string }
+                  service: { type: string }
+                  version: { type: string }
+              example:
+                status: ok
+                service: api-template
+                version: 0.1.0
+  /api/v1/commands:
+    post:
+      summary: Учебная команда до замены маршрутами своей темы
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string }
+          description: В своей теме ключ повтора переносят сюда или в тело, как решено в ПР № 2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key, subject_id]
+              properties:
+                idempotency_key: { type: string, minLength: 1 }
+                subject_id: { type: string, minLength: 1 }
+      responses:
+        "422":
+          description: Поля не прошли проверку
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: validation_error
+                  message: "idempotency_key: String should have at least 1 character"
+                  request_id: ab12cd34
+        "501":
+          description: Заготовка ещё не выполняет команду темы
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: not_implemented
+                  message: Маршруты темы ещё не написаны
+                  request_id: ab12cd34
+  /api/v1/commands/{command_id}:
+    get:
+      summary: Чтение команды, которой в заготовке нет
+      parameters:
+        - name: command_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "404":
+          description: Нет такой команды
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: not_found
+                  message: Команда не найдена
+                  request_id: ab12cd34
+components:
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            request_id: { type: string }

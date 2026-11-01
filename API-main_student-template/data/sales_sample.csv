@@ -1,0 +1,10 @@
+store_id,sku_id,day,quantity,promo,temp_c
+shop-17,milk-1l,2026-05-01,40,0,12
+shop-17,milk-1l,2026-05-02,42,0,13
+shop-17,milk-1l,2026-05-03,38,1,11
+shop-17,bread-500,2026-05-01,25,0,12
+shop-17,bread-500,2026-05-02,27,0,13
+shop-22,milk-1l,2026-05-01,15,0,14
+shop-22,milk-1l,2026-05-02,18,1,15
+field-3,wheat,2026-05-01,31,0,16
+field-3,wheat,2026-05-02,29,0,17
