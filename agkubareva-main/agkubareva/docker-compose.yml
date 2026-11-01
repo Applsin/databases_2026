@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_VERSION: "0.1.0"
+      APP_NAME: api-tech-student
