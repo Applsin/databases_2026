@@ -3,19 +3,21 @@ set -euo pipefail
 
 IMAGE=seminar8-jupyter
 CONTAINER=seminar8
-CONTEXT="$(pwd)/окружение"
+
+PROJECT_DIR="$(pwd -W)"
+CONTEXT="$PROJECT_DIR/окружение"
 
 echo "=== Сборка образа ==="
-docker build -t "$IMAGE" "$CONTEXT"
+MSYS_NO_PATHCONV=1 docker build -t "$IMAGE" "$CONTEXT"
 
 echo "=== Остановка старого контейнера (если был) ==="
 docker rm -f "$CONTAINER" 2>/dev/null || true
 
 echo "=== Запуск контейнера ==="
-docker run -d --name "$CONTAINER" \
+MSYS_NO_PATHCONV=1 docker run -d --name "$CONTAINER" \
   -p 8888:8888 \
   -p 5432:5432 \
-  -v "$(pwd):/home/student/work" \
+  -v "$PROJECT_DIR:/home/student/work" \
   "$IMAGE"
 
 echo "Готово!"
